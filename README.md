@@ -1,19 +1,19 @@
-# Poulepi
+# Poulpy
 
-**The little chick of the city under the sea!** Poulepi is a little chick in a glass bubble
-helmet who lives in an underwater city. He looks after his sea turtles (seaweed for energy, and
+**The little octopus of the city under the sea!** Poulpy is a little pink octopus who lives
+in an underwater city. He looks after his sea turtles (seaweed for energy, and
 a close-up where you rub the algae off their shell with your finger), rides them around the
-city, races them against a clownfish, a pufferfish, a manta ray, an octopus and a whale, and
+city, races them against a clownfish, a pufferfish, a manta ray, a crab and a whale, and
 follows the arrow on treasure hunts to find chests full of pearls. The city gets prettier as
 you play (lamps, a giant clam, a champion's statue).
 
 For **young kids (6–8)**: almost no reading needed, one-tap actions, a guide arrow, sound.
 The game is in French, with an English version (flag toggle on the home screen).
 
-▶ **[Play Poulepi](https://ludea.ai/poulpy/)**
+▶ **[Play Poulpy](https://ludea.ai/poulpy/)**
 
-Poulepi is built on the reusable **Ludea game engine** (the [game-engine](https://github.com/ludea-ai/game-engine)
-template): the whole game is described in `game.config.js` + generated art (`tools/art/poulepi.cjs`).
+Poulpy is built on the reusable **Ludea game engine** (the [game-engine](https://github.com/ludea-ai/game-engine)
+template): the whole game is described in `game.config.js` + generated art (`tools/art/poulpy.cjs`).
 The rest of this README explains how the engine works and how to make your own game with it.
 
 ---

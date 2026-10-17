@@ -181,19 +181,25 @@ like a game made by a studio — not a prototype. Concretely:
   `--chip-bg` with two ROUND flags and a `--primary` knob that slides behind the active one; a tap
   switches. Owner iterations (don't redo them): text `FR · EN` = invisible; big 40 px flags = too
   big; tiny footer flags = no; flags merged into a split pill = "pas fan" → KEEP this knob toggle. Any new/changed text ships translated (`--check`).
+- **Requests are often dictated by voice**: names and creatures can be mis-transcribed (Poulpy: "petit
+  poulpe" arrived as "petit poulet" → a chick was drawn, then thrown away). Before drawing the hero,
+  cross-check the request with the repo name / title and, when a word could be heard two ways, confirm
+  the hero (species + name spelling) in the first interview question.
 - New owner feedback → add it to this section (via **capitalize-learnings**).
 
-## 10. This repo — Poulepi (`ludea-ai/poulpy`)
+## 10. This repo — Poulpy (`ludea-ai/poulpy`)
 - A game created from the template (live at https://ludea.ai/poulpy/; `deploy.yml` publishes the game).
   Kids 6–8, French source (`meta.lang:"fr"`) + English in `game.i18n.js`.
-- Poulepi = a little chick in a glass bubble helmet, in a city under the sea. Loop: sea turtles
+- Poulpy = a little pink octopus, in a city under the sea. Loop: sea turtles
   (needs `energie` ← seaweed, `propre` ← close-up brushing of algae off the shell), ride a turtle,
-  pseudo-3D **race** against sea animals (`race.rivals`: clownfish, pufferfish, ray, octopus, whale),
-  **treasure hunts** (`missions`, one leg, chest marker), rest in Poulepi's egg house, unlocks
+  pseudo-3D **race** against sea animals (`race.rivals`: clownfish, pufferfish, ray, crab, whale),
+  **treasure hunts** (`missions`, one leg, chest marker), rest in Poulpy's jar (amphora) house, unlocks
   (lamps, giant clam, champion statue), 2 objective levels. Pearls = coins (no shop yet).
 - Owner choices (first interview): extra activity = **treasure hunt**; race mount = **sea turtle**.
-- Art: `tools/art/poulepi.cjs` — `chick()` (Poulepi, every view), `turtle()` (side), `turtleFront()`
-  (close-up, thumbs), `turtleBack()` + `chickBack()` (race layers). Close-up spot areas in the config
+  The hero is an **octopus named Poulpy** (owner correction: a first version misheard it as a chick
+  "Poulepi" — never draw a chick). Only one octopus in the game: the race has a crab, not an octopus.
+- Art: `tools/art/poulpy.cjs` — `octo()` (Poulpy, every view), `turtle()` (side), `turtleFront()`
+  (close-up, thumbs), `turtleBack()` + `octoBack()` (race layers). Close-up spot areas in the config
   (`brush.closeup.spots.area`) match `CU` in the art module.
 - Engine work is NOT done here: it is developed in `nebula` and copied here with **sync-engine**.
 
@@ -208,7 +214,7 @@ Layout in https://github.com/ludea-ai (every repo is served at `https://ludea.ai
 - **`ludea-ai.github.io`** — the brand site (https://ludea.ai/): landing EN at `/`, FR at `/fr/`, design
   system at `/design/`, games catalogue, all Ludea brand art (`tools/art/brand.cjs`). When a game
   is added or gains a mode, update its catalogue card there.
-- Games: `dr-smile`, `gta7`, `my-little-stable`, `poulpy` (Poulepi).
+- Games: `dr-smile`, `gta7`, `my-little-stable`, `poulpy` (Poulpy).
 - The engine layer (engine.js, engine.css, ENGINE.md, vendor/, .claude/skills) is identical in every
   repo. Old `jlrigau.github.io/…` addresses are gone (repos transferred); saves were not migrated
   (owner: fine). Later (not now): load the engine from one place instead of copying it.

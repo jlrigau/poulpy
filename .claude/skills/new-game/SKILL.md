@@ -54,6 +54,11 @@ Ask only what changes the output. Bundle into 1–2 `AskUserQuestion` calls:
   `guide` + `creature.tapAction` + `unlocks` — progression with no reading.) Only enable one if the user explicitly wants it in the
   first version.
 
+**Confirm the hero before drawing it.** Requests are often dictated by voice and mis-transcribed
+(a "petit poulpe" — octopus — once arrived as "petit poulet" — chick — and a whole character was drawn
+for nothing; the repo was even called `poulpy`). Cross-check the theme with the repo name / title, and
+when the hero's species or name could be heard two ways, make it the first interview question.
+
 If an answer is obvious from the theme, pick a sensible default and say so — don't
 over-ask. Bias toward the smallest playable game.
 

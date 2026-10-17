@@ -1,17 +1,17 @@
 /* =========================================================
-   GAME DEFINITION — "Poulepi" (kids 6–8)
+   GAME DEFINITION — "Poulpy" (kids 6–8)
    ---------------------------------------------------------
    This file is the ENTIRE game: data + asset references.
    The engine (engine.js) contains no game content; it reads
    this `window.GAME` object. See ENGINE.md for the schema.
 
-   Theme: Poulepi, a little chick in a bubble helmet, lives in
-   a city under the sea. He looks after his sea turtles (feed,
+   Theme: Poulpy, a little pink octopus, lives in a city
+   under the sea. He looks after his sea turtles (feed,
    brush the algae off their shell in a close-up), rides them,
    races them against sea animals (a clownfish, a pufferfish,
-   a ray, an octopus, a whale) and goes on treasure hunts
+   a ray, a crab, a whale) and goes on treasure hunts
    around the city. The city grows richer as he plays.
-   All art is generated from tools/art/poulepi.cjs (SVG → WebP).
+   All art is generated from tools/art/poulpy.cjs (SVG → WebP).
    Texts are in French (meta.lang); English in game.i18n.js.
    ========================================================= */
 
@@ -19,15 +19,15 @@ window.GAME = {
   /* ---- Identity, theming, UI strings ---- */
   meta: {
     lang: "fr",
-    title: "Poulepi",
-    titleIcon: "chick",
+    title: "Poulpy",
+    titleIcon: "octo",
     logo: "assets/img/logo.webp",
     splash: "assets/img/splash.webp",
-    shortName: "Poulepi",
-    tagline: "Le petit poussin de la cité sous la mer !",
-    saveKey: "poulepi",
+    shortName: "Poulpy",
+    tagline: "Le petit poulpe de la cité sous la mer !",
+    saveKey: "poulpy",
     audience: { minAge: 6, maxAge: 8, notes: "young kids 6–8: gentle, cute, no violence, almost no reading needed" },
-    assetVersion: "v2",
+    assetVersion: "v3",
     theme: { home: "#0e4c86", play: "#1670a8", closeup: "#0e4c86" },
     showCoins: true,
     coinIcon: "pearl",
@@ -35,8 +35,8 @@ window.GAME = {
     namePrompt: { label: "Le nom de ta cité :", placeholder: "Bulle-Ville" },
     startName: "Ma cité",
     namePromptYou: "Ton prénom",
-    avatarPrompt: "Voici Poulepi !",
-    createTitle: "Voici Poulepi !",
+    avatarPrompt: "Voici Poulpy !",
+    createTitle: "Voici Poulpy !",
     createOkLabel: "On plonge !",
     startLabel: "Nouvelle partie",
     continueLabel: "Continuer",
@@ -57,16 +57,16 @@ window.GAME = {
     },
   },
 
-  /* ---- Illustrated UI icons (tools/art/poulepi.cjs → assets/ui/icons). Any text can embed {i:key}. ---- */
+  /* ---- Illustrated UI icons (tools/art/poulpy.cjs → assets/ui/icons). Any text can embed {i:key}. ---- */
   icons: {
     star: "assets/ui/icons/star.webp", heart: "assets/ui/icons/heart.webp", heartEmpty: "assets/ui/icons/heartEmpty.webp", sound: "assets/ui/icons/sound.webp",
-    soundOff: "assets/ui/icons/soundOff.webp", help: "assets/ui/icons/help.webp", avatar: "assets/ui/icons/chick.webp", goals: "assets/ui/icons/goals.webp",
+    soundOff: "assets/ui/icons/soundOff.webp", help: "assets/ui/icons/help.webp", avatar: "assets/ui/icons/octo.webp", goals: "assets/ui/icons/goals.webp",
     close: "assets/ui/icons/close.webp", play: "assets/ui/icons/play.webp", resume: "assets/ui/icons/resume.webp", check: "assets/ui/icons/check.webp",
     calendar: "assets/ui/icons/calendar.webp", gift: "assets/ui/icons/gift.webp", hand: "assets/ui/icons/hand.webp", sparkle: "assets/ui/icons/sparkle.webp",
     moon: "assets/ui/icons/moon.webp", refresh: "assets/ui/icons/refresh.webp", arrow: "assets/ui/icons/arrow.webp", trophy: "assets/ui/icons/trophy.webp",
     palette: "assets/ui/icons/palette.webp", battery: "assets/ui/icons/battery.webp", smile: "assets/ui/icons/smile.webp",
     meh: "assets/ui/icons/meh.webp", sad: "assets/ui/icons/sad.webp", joy: "assets/ui/icons/joy.webp", home: "assets/ui/icons/home.webp", lock: "assets/ui/icons/lock.webp",
-    chick: "assets/ui/icons/chick.webp", turtle: "assets/ui/icons/turtle.webp", pearl: "assets/ui/icons/pearl.webp", seaweed: "assets/ui/icons/seaweed.webp",
+    octo: "assets/ui/icons/octo.webp", turtle: "assets/ui/icons/turtle.webp", pearl: "assets/ui/icons/pearl.webp", seaweed: "assets/ui/icons/seaweed.webp",
     brush: "assets/ui/icons/brush.webp", ride: "assets/ui/icons/ride.webp", chest: "assets/ui/icons/chest.webp", map: "assets/ui/icons/map.webp",
     flag: "assets/ui/icons/flag.webp", timer: "assets/ui/icons/timer.webp", distance: "assets/ui/icons/distance.webp", speed: "assets/ui/icons/speed.webp",
     quit: "assets/ui/icons/quit.webp", left: "assets/ui/icons/left.webp", right: "assets/ui/icons/right.webp",
@@ -89,7 +89,7 @@ window.GAME = {
     music: { tempo: 84, root: 60, scale: "majorPenta", progression: [0, 5, 7, 5], pad: "sine", lead: "triangle", density: 0.45, volume: 0.2 },
   },
 
-  /* ---- A bouncing arrow shows which turtle needs Poulepi when the child is idle ---- */
+  /* ---- A bouncing arrow shows which turtle needs Poulpy when the child is idle ---- */
   guide: { idle: 5, color: "#ff6fa5", moodBelow: 55 },
 
   /* ---- World: a sunny seabed with a shell-paved plaza and streets ---- */
@@ -112,7 +112,7 @@ window.GAME = {
       lamp: { path: "assets/img/lamp.webp", res: 2 }, vent: { path: "assets/img/vent.webp", res: 2 },
       starfish: { path: "assets/img/starfish.webp", res: 2 }, starfish_b: { path: "assets/img/starfish_b.webp", res: 2 },
       clam: { path: "assets/img/clam.webp", res: 2 }, statue: { path: "assets/img/statue.webp", res: 2 },
-      egg_house: { path: "assets/img/egg_house.webp", res: 2 }, map_board: { path: "assets/img/map_board.webp", res: 2 }, chest: { path: "assets/img/chest.webp", res: 2 },
+      jar_house: { path: "assets/img/jar_house.webp", res: 2 }, map_board: { path: "assets/img/map_board.webp", res: 2 }, chest: { path: "assets/img/chest.webp", res: 2 },
       // close-up: algae to brush off, the sponge, the "brush me" bubble
       algae: "assets/img/algae.webp", algae_b: "assets/img/algae_b.webp", brush: "assets/img/brush.webp",
       want_algae: { path: "assets/img/want_algae.webp", res: 2 },
@@ -121,30 +121,30 @@ window.GAME = {
       turtle_closeup_rose: { path: "assets/img/turtle_closeup_rose.webp", res: 2 }, turtle_closeup_rose_done: { path: "assets/img/turtle_closeup_rose_done.webp", res: 2 },
       // race: rear views (mount + rider layer), rivals, obstacles, start arch
       turtle_back_vert: { path: "assets/img/turtle_back_vert.webp", res: 2 }, turtle_back_bleu: { path: "assets/img/turtle_back_bleu.webp", res: 2 },
-      turtle_back_rose: { path: "assets/img/turtle_back_rose.webp", res: 2 }, rider_back_poulepi: { path: "assets/img/rider_back_poulepi.webp", res: 2 },
+      turtle_back_rose: { path: "assets/img/turtle_back_rose.webp", res: 2 }, rider_back_poulpy: { path: "assets/img/rider_back_poulpy.webp", res: 2 },
       rival_clown: { path: "assets/img/rival_clown.webp", res: 2 }, rival_puffer: { path: "assets/img/rival_puffer.webp", res: 2 }, rival_ray: { path: "assets/img/rival_ray.webp", res: 2 },
-      rival_octopus: { path: "assets/img/rival_octopus.webp", res: 2 }, rival_whale: { path: "assets/img/rival_whale.webp", res: 2 },
+      rival_crab: { path: "assets/img/rival_crab.webp", res: 2 }, rival_whale: { path: "assets/img/rival_whale.webp", res: 2 },
       jellyfish: { path: "assets/img/jellyfish.webp", res: 2 }, start_gate: { path: "assets/img/start_gate.webp", res: 2 },
     },
     sheets: {
-      poulepi: { path: "assets/sheet/poulepi.webp", frameWidth: 128, frameHeight: 128, res: 2 },
-      poulepi_ride: { path: "assets/sheet/poulepi_ride.webp", frameWidth: 128, frameHeight: 128, res: 2 },
+      poulpy: { path: "assets/sheet/poulpy.webp", frameWidth: 128, frameHeight: 128, res: 2 },
+      poulpy_ride: { path: "assets/sheet/poulpy_ride.webp", frameWidth: 128, frameHeight: 128, res: 2 },
       turtle_vert: { path: "assets/sheet/turtle_vert.webp", frameWidth: 128, frameHeight: 128, res: 2 },
       turtle_bleu: { path: "assets/sheet/turtle_bleu.webp", frameWidth: 128, frameHeight: 128, res: 2 },
       turtle_rose: { path: "assets/sheet/turtle_rose.webp", frameWidth: 128, frameHeight: 128, res: 2 },
     },
   },
 
-  /* ---- Player: Poulepi ---- */
+  /* ---- Player: Poulpy the little octopus ---- */
   player: {
     scale: 0.82,
     speed: { walk: 210, run: 360, rideWalk: 300, rideRun: 460 },
-    spawn: { x: 760, y: 860 },
+    spawn: { x: 600, y: 790 },
     nameY: -110,
     shadow: { w: 44, h: 12 },
   },
   characters: [
-    { id: "poulepi", name: "Poulepi", sheet: "poulepi", rideSheet: "poulepi_ride", raceRider: "rider_back_poulepi", thumb: "assets/ui/poulepi_thumb.webp" },
+    { id: "poulpy", name: "Poulpy", sheet: "poulpy", rideSheet: "poulpy_ride", raceRider: "rider_back_poulpy", thumb: "assets/ui/poulpy_thumb.webp" },
   ],
 
   /* ---- The sea turtles: 2 needs, feed + brush (close-up), ride + race ---- */
@@ -197,7 +197,7 @@ window.GAME = {
     ],
     ride: {
       minEnergy: 10, fatigueNeed: "energie", empty: "slow", emptySpeed: 0.35,
-      sitY: -52, sitX: 6, nameY: -150,
+      sitY: -44, sitX: 6, nameY: -150,
       tooTired: "{name} est trop fatiguée. Donne-lui des algues !",
       mountMessage: "{i:ride} En route sur {name} !",
       dismountMessage: "Tu descends de {name}.",
@@ -225,8 +225,8 @@ window.GAME = {
         { name: "Filou le poisson-clown", sprite: "rival_clown", color: "#ff8a2a" },
         { name: "Gonflo le poisson-globe", sprite: "rival_puffer", color: "#ffd23f" },
         { name: "Raymonde la raie", sprite: "rival_ray", color: "#6a8fd8", scale: 7.5, hw: 0.36 },
-        { name: "Poulpy le poulpe", sprite: "rival_octopus", color: "#b07ae8" },
-        { name: "Baleino la baleine", sprite: "rival_whale", color: "#4f86d8", scale: 9, hw: 0.4 },
+        { name: "Pinça le crabe", sprite: "rival_crab", color: "#ff5a4a" },
+        { name: "Baleino la baleine", sprite: "rival_whale", color: "#4f86d8", scale: 7.5, hw: 0.36 },
       ],
       scale: 6.5, hw: 0.3, skill: [0.8, 0.95], gridGap: 3, gridFirst: 5, startGate: "start_gate", startGateScale: 17, lanes: [-0.6, 0.6],
       avoid: [0.6, 0.9],
@@ -256,9 +256,9 @@ window.GAME = {
     { id: "lagoon", home: true, rect: { x: 280, y: 280, w: 640, h: 460 }, floor: "lagoon_floor", fence: false, label: "Le lagon des tortues", labelLift: 20 },
   ],
 
-  /* ---- Stations: Poulepi's egg house (rest) and the treasure board (treasure hunts) ---- */
+  /* ---- Stations: Poulpy's jar house (rest) and the treasure board (treasure hunts) ---- */
   stations: [
-    { type: "home", x: 520, y: 1010, sprite: "egg_house", scale: 0.85, label: "La maison de Poulepi", labelY: -212, whileRiding: true,
+    { type: "home", x: 520, y: 1010, sprite: "jar_house", scale: 0.85, label: "La maison de Poulpy", labelY: -222, whileRiding: true,
       box: { dx: -86, dy: -56, w: 172, h: 58 }, action: "nextDay", actionLabel: "Dormir", icon: "moon", color: "#7b6cff", hint: "Dormir jusqu’au lendemain" },
     { type: "treasure", x: 1260, y: 900, sprite: "map_board", scale: 0.8, label: "Chasse au trésor", labelY: -184, glow: "#ffe680", whileRiding: true,
       box: { dx: -80, dy: -40, w: 160, h: 42 }, action: "missions", actionLabel: "Chercher un trésor", icon: "map", color: "#ffc93c", hint: "Suis la flèche jusqu’au trésor caché" },
@@ -319,7 +319,7 @@ window.GAME = {
     { x: 750, y: 1160, sprite: "kelp", scale: 0.7, anim: "sway", box: false },
   ],
 
-  /* ---- Unlocks: the city gets prettier as Poulepi plays (no reading needed) ---- */
+  /* ---- Unlocks: the city gets prettier as Poulpy plays (no reading needed) ---- */
   unlocks: [
     { id: "lamps", when: { stat: "feed", atLeast: 3 }, message: "{i:gift} Des lampes-poissons s’allument dans le lagon !",
       scenery: { x: 950, y: 560, sprite: "lamp", scale: 0.65, glow: "#ffe680", glowY: 95, box: { dx: -10, dy: -8, w: 20, h: 10 } } },
@@ -350,12 +350,12 @@ window.GAME = {
   /* ---- Help screen ---- */
   help: [
     "<b>Bienvenue dans la cité sous la mer !</b>",
-    "{i:hand} <b>Bouger :</b> touche le sable, Poulepi y va. Touche une tortue ou une maison pour l’utiliser.",
+    "{i:hand} <b>Bouger :</b> touche le sable, Poulpy y va. Touche une tortue ou une maison pour l’utiliser.",
     "{i:turtle} <b>Tes tortues :</b> {i:seaweed} donne-leur des algues pour l’énergie, et {i:brush} brosse leur carapace : frotte les algues avec ton doigt !",
     "{i:ride} <b>Monter :</b> monte sur une tortue pour nager plus vite dans la cité.",
-    "{i:flag} <b>La course :</b> sur ta tortue, touche Course. Touche à gauche ou à droite pour dépasser le poisson-clown, le poisson-globe, la raie, le poulpe et la baleine. Évite les méduses !",
+    "{i:flag} <b>La course :</b> sur ta tortue, touche Course. Touche à gauche ou à droite pour dépasser le poisson-clown, le poisson-globe, la raie, le crabe et la baleine. Évite les méduses !",
     "{i:map} <b>Chasse au trésor :</b> va au panneau du trésor sur la place. Suis la flèche jusqu’au coffre caché et gagne des {i:pearl} perles.",
     "{i:gift} <b>Surprises :</b> plus tu joues, plus la cité devient jolie.",
-    "{i:moon} <b>Dormir :</b> dans la maison de Poulepi, pour passer au jour suivant. Le jeu se sauvegarde tout seul.",
+    "{i:moon} <b>Dormir :</b> dans la maison de Poulpy, pour passer au jour suivant. Le jeu se sauvegarde tout seul.",
   ],
 };

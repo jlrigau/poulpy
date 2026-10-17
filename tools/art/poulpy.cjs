@@ -1,7 +1,8 @@
 /*
- * Poulepi — all the game's art as parametric SVG (rendered to WebP/PNG).
- *   node .claude/skills/_shared/render-svg.cjs tools/art/poulepi.cjs [--only chick,turtle]
- * One source of truth per character: Poulepi is always drawn by `chick()`, the sea turtles by
+ * Poulpy — all the game's art as parametric SVG (rendered to WebP/PNG).
+ *   node .claude/skills/_shared/render-svg.cjs tools/art/poulpy.cjs [--only poulpy,turtle]
+ * One source of truth per character: Poulpy (the little octopus) is always drawn by `octo()` /
+ * `octoBack()` (race), the sea turtles by
  * `turtle()` (side view) / `turtleFront()` (close-up, icons) / `turtleBack()` (race), so the walk
  * sheets, menu thumbnails, close-up, race sprites, splash and app icon never drift apart.
  */
@@ -15,107 +16,90 @@ const stk = (w) => `stroke="${INK}" stroke-width="${w}" stroke-linejoin="round" 
 const SEA = { deep: "#0b3a66", mid: "#1670a8", light: "#3fb7d9", foam: "#d8f6ff" };
 const SAND = "#ecd9a2";
 
-/* ======================= Poulepi, the little chick (with a bubble helmet) ======================= */
-const CHICK = { body: "#ffd84a", bodyD: "#f0ad1c", beak: "#ff8a2a", feet: "#ff9a35", cheek: "#ff8fa8" };
-// dir: "down" | "left" | "up" (right = flipped left by the sheet). phase = walk phase (radians).
-// opt: { seated, happy, helmet:false }
-function chick(dir, phase, moving, u, opt) {
-  opt = opt || {};
-  const P = CHICK, seated = !!opt.seated;
-  const bob = moving ? Math.abs(Math.sin(phase)) * -3 : 0;
-  const step = moving ? Math.sin(phase) : 0;
-  const flap = moving ? Math.sin(phase * 2) * 10 : 0;
-  const side = dir === "left";
-  const defs = rad(`${u}b`, [[0, "#fff6c4"], [0.5, P.body], [1, P.bodyD]], 0.4, 0.3, 0.8) +
-    rad(`${u}h`, [[0, "#fff8d2"], [0.55, P.body], [1, P.bodyD]], 0.4, 0.3, 0.85) +
-    lin(`${u}k`, [[0, "#ffc062"], [1, "#f06a1a"]]) +
-    rad(`${u}gl`, [[0, "#e9fbff", 0.10], [0.82, "#bdefff", 0.22], [1, "#8fe0ff", 0.45]], 0.42, 0.36, 0.62) +
-    lin(`${u}c`, [[0, "#c7e3f5"], [1, "#6f9cc4"]]) + lin(`${u}w`, [[0, P.body], [1, P.bodyD]]);
-  const hx = side ? 56 : 64, hy = 52;            // head centre
-  const bx = side ? 68 : 64, by = 92;            // body centre
-  let g = `<g transform="translate(0 ${f2(bob)})">`;
-  // feet (behind the body) — 3-toed orange feet
-  const foot = (x, y, lift, toLeft) => {
-    const yy = y - lift, d = toLeft ? -1 : 1;
-    return `<path d="M${f2(x)} ${f2(yy - 8)} V${f2(yy - 2)}" ${stk(5)}/><path d="M${f2(x)} ${f2(yy - 8)} V${f2(yy - 2)}" stroke="${P.feet}" stroke-width="2.5" stroke-linecap="round"/>` +
-      `<path d="M${f2(x - 7 * (side ? 1 : 1))} ${f2(yy + 2)} Q${f2(x)} ${f2(yy - 5)} ${f2(x + 7)} ${f2(yy + 2)} Q${f2(x + d * 2)} ${f2(yy + 5)} ${f2(x)} ${f2(yy + 3)} Q${f2(x - d * 2)} ${f2(yy + 5)} ${f2(x - 7)} ${f2(yy + 2)} Z" fill="${P.feet}" ${stk(2.8)}/>`;
-  };
-  if (seated) {
-    // sitting: the little feet poke forward (left) out from under the body
-    if (side) g += foot(46, 114, 0, true) + foot(56, 116, 0, true);
-    else g += foot(52, 117, 0) + foot(76, 117, 0);
-  } else if (side) {
-    g += foot(62 - step * 8, 120, step > 0 ? 4 * step : 0, true) + foot(74 + step * 8, 120, step < 0 ? -4 * step : 0, true);
-  } else {
-    g += foot(52, 120, step > 0 ? 5 * step : 0) + foot(76, 120, step < 0 ? -5 * step : 0);
-  }
-  // tail feathers (seen from the back and the side)
-  if (side) g += `<path d="M94 92 Q108 84 106 98 Q100 104 92 102 Z" fill="${P.bodyD}" ${stk(3)}/>`;
-  // far wing (side view)
-  if (side) g += `<ellipse cx="${bx + 2}" cy="${by - 6}" rx="9" ry="14" fill="${P.bodyD}" ${stk(3)} transform="rotate(${30 - flap} ${bx + 2} ${by - 16})"/>`;
-  // body
-  g += `<ellipse cx="${bx}" cy="${by}" rx="${side ? 29 : 30}" ry="25" fill="url(#${u}b)" ${stk(3.5)}/>`;
-  if (dir === "down") g += `<ellipse cx="64" cy="98" rx="15" ry="12" fill="#fff4bc" opacity=".75"/>`;
-  // tail seen from the back: three little feathers fanned up under the body's bottom edge
-  if (dir === "up") g += `<path d="M64 112 L54 104 Q52 114 60 118 Z M64 112 L64 100 Q58 110 64 120 Q70 110 64 100 Z M64 112 L74 104 Q76 114 68 118 Z" fill="${P.bodyD}" ${stk(2.4)}/>`;
-  // wings
-  const wing = (x, y, ang, m) => `<path d="M${x} ${y} Q${x + m * 16} ${y + 6} ${x + m * 10} ${y + 24} Q${x + m * 2} ${y + 20} ${x} ${y + 14} Z" fill="${P.body}" ${stk(3)} transform="rotate(${f2(ang)} ${x} ${y})"/>`;
-  if (side) { const x = bx + 2, y = by - 12; g += `<path d="M${x} ${y} Q${x + 16} ${y + 4} ${x + 14} ${y + 22} Q${x + 3} ${y + 27} ${x - 5} ${y + 13} Z" fill="url(#${u}w)" ${stk(2.6)} transform="rotate(${f2(-10 + flap * 0.6)} ${x} ${y})"/>`; }
-  else { g += wing(36, by - 12, 12 - flap, -1) + wing(92, by - 12, -12 + flap, 1); }
-  // helmet collar (metal ring where the glass dome meets the body)
-  g += side ? `<ellipse cx="${(hx + bx) / 2}" cy="83" rx="20" ry="6.5" fill="url(#${u}c)" ${stk(3)} transform="rotate(-8 ${(hx + bx) / 2} 83)"/>`
-    : `<ellipse cx="${hx}" cy="83" rx="23" ry="6.5" fill="url(#${u}c)" ${stk(3)}/>`;
-  // head
-  g += `<circle cx="${hx}" cy="${hy}" r="27" fill="url(#${u}h)" ${stk(3.5)}/>`;
-  // tuft: three little feathers on the top of the head
-  const tx = hx + (side ? 4 : 0);
-  g += `<path d="M${tx - 2} 28 Q${tx - 11} 20 ${tx - 7} 17 Q${tx - 2} 20 ${tx} 26 Q${tx + 2} 15 ${tx + 8} 16 Q${tx + 8} 23 ${tx + 3} 29 Z" fill="${P.body}" ${stk(2.6)}/>`;
-  if (dir === "down") {
-    // face: big shiny eyes, a beak, rosy cheeks
-    const eye = (x) => opt.happy
-      ? `<path d="M${x - 6} 53 Q${x} 45 ${x + 6} 53" fill="none" ${stk(3.5)}/>`
-      : `<ellipse cx="${x}" cy="51" rx="5.4" ry="6.6" fill="${INK}"/><circle cx="${x - 1.6}" cy="48.6" r="2.2" fill="#fff"/><circle cx="${x + 1.8}" cy="54" r="1" fill="#fff" opacity=".8"/>`;
-    g += eye(53) + eye(75);
-    g += `<ellipse cx="44" cy="62" rx="5.5" ry="3.4" fill="${P.cheek}" opacity=".7"/><ellipse cx="84" cy="62" rx="5.5" ry="3.4" fill="${P.cheek}" opacity=".7"/>`;
-    g += `<path d="M57 59 Q64 55 71 59 Q64 64 57 59 Z" fill="url(#${u}k)" ${stk(2.6)}/><path d="M58.5 60 Q64 68 69.5 60" fill="${shade(P.beak, -0.15)}" ${stk(2.6)}/>`;
-  } else if (side) {
-    g += opt.happy ? `<path d="M${hx - 16} 52 Q${hx - 10} 44 ${hx - 4} 52" fill="none" ${stk(3.5)}/>`
-      : `<ellipse cx="${hx - 10}" cy="50" rx="5" ry="6.4" fill="${INK}"/><circle cx="${hx - 11.6}" cy="47.6" r="2.1" fill="#fff"/>`;
-    g += `<ellipse cx="${hx - 4}" cy="62" rx="5" ry="3.2" fill="${P.cheek}" opacity=".7"/>`;
-    g += `<path d="M${hx - 22} 55 L${hx - 36} 59 L${hx - 22} 63 Z" fill="url(#${u}k)" ${stk(2.6)}/>`;
-  } else {
-    // back of the head: a few soft feathers
-    g += `<path d="M58 64 L64 72 L70 64" fill="none" stroke="${P.bodyD}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity=".6"/>`;
-  }
-  // the glass bubble helmet (over everything): translucent dome, rim, big highlight
-  if (opt.helmet !== false) {
-    g += `<circle cx="${hx}" cy="${hy - 2}" r="36" fill="url(#${u}gl)"/>`;
-    g += `<circle cx="${hx}" cy="${hy - 2}" r="36" fill="none" stroke="#e8fbff" stroke-width="3.5" opacity=".9"/>`;
-    g += `<circle cx="${hx}" cy="${hy - 2}" r="37.6" fill="none" stroke="${INK}" stroke-width="2.4" opacity=".75"/>`;
-    g += `<path d="M${hx - 26} ${hy - 14} Q${hx - 20} ${hy - 30} ${hx - 4} ${hy - 33}" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".85"/>`;
-    g += `<circle cx="${hx + 22}" cy="${hy - 22}" r="3" fill="#fff" opacity=".85"/>`;
-  }
-  g += `</g>`;
-  return { defs, body: g };
+/* ======================= Poulpy, the little octopus ======================= */
+const OCTO = { body: "#ff8fa3", bodyD: "#e0567a", light: "#ffe0e7", spot: "#ffc4d1", cheek: "#ff4f7b" };
+// one tentacle: from (x0,y0) via (cx,cy) to (x1,y1), tip curled towards `curl` (-1 left / +1 right)
+function tentacle(x0, y0, cx, cy, x1, y1, curl, w, col) {
+  const d = `M${f2(x0)} ${f2(y0)} Q${f2(cx)} ${f2(cy)} ${f2(x1)} ${f2(y1)} q${f2(curl * 7)} ${f2(5)} ${f2(curl * 1)} ${f2(10)}`;
+  return `<path d="${d}" fill="none" stroke="${INK}" stroke-width="${w + 6}" stroke-linecap="round" stroke-linejoin="round"/>` +
+    `<path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
 }
-function chickFrame(dir, i, u) {
+const octoDefs = (u) => rad(`${u}b`, [[0, "#fff2f5"], [0.45, OCTO.body], [1, OCTO.bodyD]], 0.4, 0.28, 0.8);
+// the spotty mantle (head) centred on (cx, cy)
+function mantle(u, cx, cy, rx, ry, rot) {
+  let g = `<g transform="rotate(${rot || 0} ${cx} ${cy})"><ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#${u}b)" ${stk(3.5)}/>`;
+  [[-0.42, -0.5, 0.13], [0.3, -0.62, 0.16], [0.6, -0.15, 0.1], [-0.12, -0.78, 0.08]].forEach(([a, b, r]) => {
+    g += `<ellipse cx="${f2(cx + a * rx)}" cy="${f2(cy + b * ry)}" rx="${f2(r * rx)}" ry="${f2(r * rx * 0.85)}" fill="${OCTO.spot}"/>`; });
+  g += `<path d="M${f2(cx - rx * 0.72)} ${f2(cy - ry * 0.18)} Q${f2(cx - rx * 0.6)} ${f2(cy - ry * 0.72)} ${f2(cx - rx * 0.12)} ${f2(cy - ry * 0.86)}" fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round" opacity=".75"/>`;
+  return g + `</g>`;
+}
+function octoEye(x, y, s, happy, look) {
+  if (happy) return `<path d="M${x - 7 * s} ${y + 2 * s} Q${x} ${y - 8 * s} ${x + 7 * s} ${y + 2 * s}" fill="none" ${stk(3.5)}/>`;
+  const lx = (look || 0) * 2 * s;
+  return `<ellipse cx="${x}" cy="${y}" rx="${8.5 * s}" ry="${10 * s}" fill="#fff" ${stk(2.6)}/>` +
+    `<ellipse cx="${x + lx}" cy="${y + 1.5 * s}" rx="${5.6 * s}" ry="${6.8 * s}" fill="${INK}"/>` +
+    `<circle cx="${x + lx - 2 * s}" cy="${y - 1.6 * s}" r="${2.3 * s}" fill="#fff"/><circle cx="${x + lx + 2 * s}" cy="${y + 4 * s}" r="${1 * s}" fill="#fff" opacity=".8"/>`;
+}
+// dir: "down" | "left" | "up" (right = flipped left). opt: { seated, happy }
+function octo(dir, phase, moving, u, opt) {
+  opt = opt || {};
+  const P = OCTO, side = dir === "left", seated = !!opt.seated;
+  const bob = moving ? -Math.abs(Math.sin(phase)) * 3 : 0;
+  const wv = (k) => (moving ? Math.sin(phase + k * 1.3) : 0);
+  const defs = octoDefs(u);
+  let g = `<g transform="translate(0 ${f2(bob)})">`;
+  const W = 9, C = P.body, CD = shade(P.body, -0.1);
+  if (seated && side) {
+    // sitting on the shell: two tentacles draped down the front, two down the back, curled tips
+    g += tentacle(78, 84, 92, 96, 100, 110, 1, W, CD) + tentacle(50, 84, 40, 96, 36, 110, -1, W, CD);
+    g += tentacle(70, 86, 76, 100, 84, 116, 1, W, C) + tentacle(56, 86, 50, 100, 46, 116, -1, W, C);
+    g += mantle(u, 66, 56, 31, 29, 8);
+    g += octoEye(52, 64, 1, opt.happy, -1) + `<ellipse cx="44" cy="76" rx="5" ry="3" fill="${P.cheek}" opacity=".45"/>`;
+    g += `<path d="M38 77 Q42 80 46 78" fill="none" ${stk(2.6)}/>`;
+  } else if (side) {
+    // walking to the left: tentacles reach forward and trail behind, alternating
+    const t = [[50, -1, 30, 104], [58, -1, 42, 108], [66, 1, 60, 108], [74, 1, 82, 108], [82, 1, 100, 106], [88, 1, 110, 100]];
+    t.forEach(([x0, c, x1, y1], k) => {
+      const dx = wv(k) * 6, dy = Math.max(0, wv(k + 1)) * -5;
+      g += tentacle(x0, 80, (x0 + x1) / 2 + c * 2, 98, x1 + dx, y1 + dy, c, W, k % 2 ? C : CD);
+    });
+    g += mantle(u, 68, 50, 32, 30, 10);
+    g += octoEye(54, 60, 1, opt.happy, -1) + `<ellipse cx="46" cy="72" rx="5" ry="3" fill="${P.cheek}" opacity=".45"/>`;
+    g += `<path d="M40 73 Q44 76 48 74" fill="none" ${stk(2.6)}/>`;
+  } else {
+    // front / back: six tentacles fanning out under the mantle
+    const t = [[44, 22, 108], [52, 34, 116], [60, 52, 120], [68, 76, 120], [76, 94, 116], [84, 106, 108]];
+    t.forEach(([x0, x1, y1], k) => {
+      const c = x1 < 64 ? -1 : 1, dx = wv(k) * 4, dy = Math.max(0, wv(k + 2)) * -5;
+      g += tentacle(x0, 78, (x0 + x1) / 2, 100, x1 + dx, y1 + dy - 8, c, W, (k === 0 || k === 5) ? CD : C);
+    });
+    g += mantle(u, 64, 52, 34, 32, 0);
+    if (dir === "down") {
+      g += octoEye(51, 60, 1, opt.happy) + octoEye(77, 60, 1, opt.happy);
+      g += `<ellipse cx="39" cy="72" rx="5.5" ry="3.2" fill="${P.cheek}" opacity=".45"/><ellipse cx="89" cy="72" rx="5.5" ry="3.2" fill="${P.cheek}" opacity=".45"/>`;
+      g += `<path d="M58 72 Q64 78 70 72" fill="none" ${stk(2.8)}/>`;
+    } else {
+      // back of the head: just more spots, no marks at eye height (they read as a face)
+      g += `<ellipse cx="54" cy="64" rx="5" ry="4" fill="${P.spot}"/><ellipse cx="76" cy="68" rx="4" ry="3.4" fill="${P.spot}"/>`;
+    }
+  }
+  return { defs, body: g + `</g>` };
+}
+function octoFrame(dir, i, u) {
   const moving = i > 0, ph = moving ? ((i - 1) / 8) * Math.PI * 2 : 0;
-  const d = dir === "right" ? "left" : dir;
-  const r = chick(d, ph, moving, u);
+  const r = octo(dir === "right" ? "left" : dir, ph, moving, u);
   const body = `<g transform="translate(64 124) scale(0.86) translate(-64 -124)">${r.body}</g>`;
   return { defs: r.defs, body: dir === "right" ? `<g transform="translate(128 0) scale(-1 1)">${body}</g>` : body };
 }
-function chickSheet() {
-  const dirs = ["up", "left", "down", "right"];
+function octoSheet() {
   let defs = "", frames = [];
-  dirs.forEach((d, r) => { for (let i = 0; i < 9; i++) { const f = chickFrame(d, i, `p${r}${i}`); defs += f.defs; frames.push(f.body); } });
-  return job("assets/sheet/poulepi.png", 128 * 9, 128 * 4, sheet(frames, 128, 128, 9), defs);
+  ["up", "left", "down", "right"].forEach((d, r) => { for (let i = 0; i < 9; i++) { const f = octoFrame(d, i, `p${r}${i}`); defs += f.defs; frames.push(f.body); } });
+  return job("assets/sheet/poulpy.png", 128 * 9, 128 * 4, sheet(frames, 128, 128, 9), defs);
 }
-function chickThumb() { const r = chick("down", 0, false, "pt"); return job("assets/ui/poulepi_thumb.png", 128, 128, r.body, r.defs); }
-// riding pose (side view facing left, one frame): sitting, feet forward
-function chickRide() {
-  const r = chick("left", 0, false, "pr", { seated: true });
-  return job("assets/sheet/poulepi_ride.png", 128, 128, `<g transform="translate(64 124) scale(0.74) translate(-64 -124)">${r.body}</g>`, r.defs);
+function octoThumb() { const r = octo("down", 0, false, "pt"); return job("assets/ui/poulpy_thumb.png", 128, 128, `<g transform="translate(64 66) scale(1.04) translate(-64 -70)">${r.body}</g>`, r.defs); }
+function octoRide() {   // riding pose (side view facing left, one frame)
+  const r = octo("left", 0, false, "pr", { seated: true });
+  return job("assets/sheet/poulpy_ride.png", 128, 128, `<g transform="translate(64 120) scale(0.78) translate(-64 -128)">${r.body}</g>`, r.defs);
 }
 
 /* ======================= Sea turtle (the mount) ======================= */
@@ -166,7 +150,7 @@ function turtleSheet(v, happy) {
   const frames = [0, 1, 2, 3].map((i) => { const r = turtle({ v, ph: (i / 4) * Math.PI * 2, uid: `t${i}`, happy }); defs += r.defs; return `<g transform="translate(66 112) scale(0.9) translate(-64 -104)">${r.body}</g>`; });
   return job(`assets/sheet/turtle_${happy ? "happy_" : ""}${v}.png`, 512, 128, sheet(frames, 128, 128, 4), defs);
 }
-function turtleThumb(v) { const r = turtleFront({ v, uid: "tt" }); return job(`assets/ui/turtle_${v}.png`, 128, 128, `<g transform="translate(64 64) scale(0.17) translate(-450 -870)">${r.body}</g>`, r.defs); }
+function turtleThumb(v) { const r = turtleFront({ v, uid: "tt" }); return job(`assets/ui/turtle_${v}.png`, 128, 128, `<g transform="translate(64 64) scale(0.15) translate(-450 -850)">${r.body}</g>`, r.defs); }
 
 /* Front view (close-up backdrop, thumbnails, icon): a big face under a big domed shell, seen slightly from above.
    Drawn on the 900×1300 close-up grid. o: { v, happy, uid } */
@@ -209,7 +193,7 @@ function turtleFront(o) {
 
 /* ======================= Race: rear views (200×170 frames, same grid for mount + rider) ======================= */
 // The turtle seen from behind: a low, wide shell dome, front flippers paddling out on the sides, back flippers +
-// tail at the bottom. The rider layer (chickBack) sits on the dome top (seat ≈ y 84).
+// tail at the bottom. The rider layer (octoBack) sits on the dome top (seat ≈ y 84).
 function turtleBack(v) {
   const T = TURTLES[v], u = "tb", sk = T.skin, skD = shade(sk, -0.22), sh = T.shell, shD = shade(sh, -0.3);
   const defs = rad(`${u}s`, [[0, shade(sh, 0.45)], [0.6, sh], [1, shD]], 0.45, 0.2, 0.85) + rad(`${u}k`, [[0, "#ffffff"], [0.45, sk], [1, skD]], 0.4, 0.3, 0.8) + blur(`${u}bl`, 3);
@@ -227,22 +211,15 @@ function turtleBack(v) {
   g += `<path d="M44 100 Q60 84 84 82" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".5"/>`;
   return job(`assets/img/turtle_back_${v}.png`, 200, 170, g, defs);
 }
-// Poulepi seen from behind, sitting on the shell, little wings out like he's holding on.
-function chickBack() {
-  const P = CHICK, u = "cb";
-  const defs = rad(`${u}b`, [[0, "#fff6c4"], [0.5, P.body], [1, P.bodyD]], 0.4, 0.3, 0.8) +
-    rad(`${u}gl`, [[0, "#e9fbff", 0.10], [0.82, "#bdefff", 0.22], [1, "#8fe0ff", 0.45]], 0.42, 0.36, 0.62) + lin(`${u}c`, [[0, "#c7e3f5"], [1, "#6f9cc4"]]);
+// Poulpy seen from behind, sitting on the shell: the spotty mantle up top, tentacles draped over the dome.
+function octoBack() {
+  const u = "ob", C = OCTO.body, CD = shade(OCTO.body, -0.1);
   let g = "";
-  g += `<path d="M76 72 Q56 70 50 82 Q60 88 76 82 Z M124 72 Q144 70 150 82 Q140 88 124 82 Z" fill="${P.body}" ${stk(3)}/>`;
-  g += `<ellipse cx="100" cy="76" rx="27" ry="22" fill="url(#${u}b)" ${stk(3.5)}/>`;
-  g += `<path d="M100 92 L90 86 Q88 94 96 97 Z M100 92 L100 82 Q95 90 100 98 Q105 90 100 82 Z M100 92 L110 86 Q112 94 104 97 Z" fill="${P.bodyD}" ${stk(2.2)}/>`;
-  g += `<ellipse cx="100" cy="58" rx="20" ry="5.5" fill="url(#${u}c)" ${stk(3)}/>`;
-  g += `<circle cx="100" cy="34" r="22" fill="url(#${u}b)" ${stk(3.5)}/>`;
-  g += `<path d="M98 14 Q90 6 93 3 Q98 6 100 12 Q102 3 107 4 Q107 10 103 15 Z" fill="${P.body}" ${stk(2.4)}/>`;
-  g += `<path d="M95 44 L100 50 L105 44" fill="none" stroke="${P.bodyD}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" opacity=".6"/>`;
-  g += `<circle cx="100" cy="32" r="29" fill="url(#${u}gl)"/><circle cx="100" cy="32" r="29" fill="none" stroke="#e8fbff" stroke-width="3" opacity=".9"/><circle cx="100" cy="32" r="30.4" fill="none" stroke="${INK}" stroke-width="2" opacity=".75"/>`;
-  g += `<path d="M80 22 Q86 10 98 7" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".85"/>`;
-  return job("assets/img/rider_back_poulepi.png", 200, 170, g, defs);
+  [[88, 70, 96, -1, CD], [112, 130, 96, 1, CD], [94, 58, 104, -1, C], [106, 142, 104, 1, C], [98, 84, 112, -1, C], [102, 116, 112, 1, C]].forEach(([x0, x1, y1, c, col]) => {
+    g += tentacle(x0, 62, (x0 + x1) / 2, y1 - 22, x1, y1 - 6, c, 10, col); });
+  g += mantle(u, 100, 36, 30, 29, 0);
+  g += `<ellipse cx="90" cy="50" rx="5" ry="4" fill="${OCTO.spot}"/><ellipse cx="112" cy="54" rx="4" ry="3.4" fill="${OCTO.spot}"/>`;
+  return job("assets/img/rider_back_poulpy.png", 200, 170, g, octoDefs(u));
 }
 
 /* ---- Rivals: sea animals seen from behind (200×170, base ≈ y 160), each with eyes peeking on the sides ---- */
@@ -253,13 +230,13 @@ function rivalClown() {   // Filou the clownfish: orange body with white stripes
   const defs = rad(`${u}b`, [[0, "#ffd0a0"], [0.5, o], [1, "#d85a10"]], 0.4, 0.3, 0.8) + blur(`${u}bl`, 3);
   let g = rivalShadow(u, 46);
   g += `<path d="M58 96 Q30 104 26 122 Q46 118 62 110 Z M142 96 Q170 104 174 122 Q154 118 138 110 Z" fill="${o}" ${stk(3)}/>`;
-  g += eyeSide(56, 66, 8, -1) + eyeSide(144, 66, 8, 1);   // eyes on the sides, half hidden behind the body
+  g += eyeSide(58, 54, 8, -1) + eyeSide(142, 54, 8, 1);   // eyes on the sides, half hidden behind the body
   g += `<ellipse cx="100" cy="88" rx="46" ry="52" fill="url(#${u}b)" ${stk(4)}/>`;
   g += `<path d="M58 70 Q100 54 142 70 Q140 82 136 88 Q100 74 64 88 Q60 82 58 70 Z" fill="#fff" ${stk(2.8)}/>`;
   g += `<path d="M56 108 Q100 94 144 108 Q140 120 134 126 Q100 114 66 126 Q60 120 56 108 Z" fill="#fff" ${stk(2.8)}/>`;
   g += `<path d="M84 40 Q100 22 116 40 Q100 36 84 40 Z" fill="${o}" ${stk(3)}/>`;
   // the tail fin seen from behind: a tall thin vertical blade with a dark edge
-  g += `<path d="M100 96 Q90 120 92 156 Q100 162 108 156 Q110 120 100 96 Z" fill="${o}" ${stk(3.5)}/><path d="M100 104 V152" stroke="#d85a10" stroke-width="3" stroke-linecap="round"/>`;
+  g += `<path d="M100 130 Q80 146 78 164 Q90 158 100 150 Q110 158 122 164 Q120 146 100 130 Z" fill="#d85a10" ${stk(3.5)}/>`;
   return job("assets/img/rival_clown.png", 200, 170, g, defs);
 }
 function rivalPuffer() {  // Gonflo the pufferfish: a round spiky yellow ball
@@ -269,10 +246,10 @@ function rivalPuffer() {  // Gonflo the pufferfish: a round spiky yellow ball
   for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2, x = 100 + Math.cos(a) * 58, y = 92 + Math.sin(a) * 56, x2 = 100 + Math.cos(a) * 72, y2 = 92 + Math.sin(a) * 70;
     const px = Math.cos(a + 1.57) * 6, py = Math.sin(a + 1.57) * 6;
     g += `<path d="M${f2(x - px)} ${f2(y - py)} L${f2(x2)} ${f2(y2)} L${f2(x + px)} ${f2(y + py)} Z" fill="#fff3b0" ${stk(2.6)}/>`; }
-  g += eyeSide(46, 76, 9, -1) + eyeSide(154, 76, 9, 1);
+  g += eyeSide(48, 64, 9, -1) + eyeSide(152, 64, 9, 1);
   g += `<circle cx="100" cy="92" r="60" fill="url(#${u}b)" ${stk(4)}/>`;
   [[80, 70], [120, 76], [96, 110], [70, 104], [128, 112], [104, 56]].forEach(([x, y]) => { g += `<circle cx="${x}" cy="${y}" r="5" fill="#c99a20" opacity=".5"/>`; });
-  g += `<path d="M100 112 Q92 132 94 158 Q100 164 106 158 Q108 132 100 112 Z" fill="#ffb02e" ${stk(3.2)}/>`;
+  g += `<path d="M100 140 Q84 152 82 166 Q92 162 100 156 Q108 162 118 166 Q116 152 100 140 Z" fill="#e0a020" ${stk(3.2)}/>`;
   return job("assets/img/rival_puffer.png", 200, 170, g, defs);
 }
 function rivalRay() {     // Raymonde the manta ray: wide wings, long thin tail towards us
@@ -286,16 +263,28 @@ function rivalRay() {     // Raymonde the manta ray: wide wings, long thin tail 
   g += `<path d="M100 122 Q98 146 100 164" fill="none" stroke="${INK}" stroke-width="7" stroke-linecap="round"/><path d="M100 122 Q98 146 100 164" fill="none" stroke="${c}" stroke-width="3" stroke-linecap="round"/>`;
   return job("assets/img/rival_ray.png", 200, 170, g, defs);
 }
-function rivalOctopus() { // Poulpy the octopus: round purple head, curly tentacles
-  const u = "ro", c = "#b07ae8";
-  const defs = rad(`${u}b`, [[0, "#f0dcff"], [0.5, c], [1, "#7a48b8"]], 0.4, 0.3, 0.8) + blur(`${u}bl`, 3);
-  let g = rivalShadow(u, 56);
-  const tent = (x0, x1, y1, curl) => { y1 -= 16; return  `<path d="M${x0} 104 Q${(x0 + x1) / 2} ${y1 - 20} ${x1} ${y1} q${curl * 10} 8 ${curl * 2} 14" fill="none" stroke="${INK}" stroke-width="17" stroke-linecap="round"/><path d="M${x0} 104 Q${(x0 + x1) / 2} ${y1 - 20} ${x1} ${y1} q${curl * 10} 8 ${curl * 2} 14" fill="none" stroke="${c}" stroke-width="10" stroke-linecap="round"/>`; };
-  g += tent(70, 30, 140, -1) + tent(130, 170, 140, 1) + tent(80, 56, 156, -1) + tent(120, 144, 156, 1) + tent(92, 84, 160, -1) + tent(108, 116, 160, 1);
-  g += eyeSide(56, 78, 9, -1) + eyeSide(144, 78, 9, 1);
-  g += `<ellipse cx="100" cy="70" rx="48" ry="54" fill="url(#${u}b)" ${stk(4)}/>`;
-  [[82, 46, 7], [116, 40, 5], [104, 70, 6], [76, 80, 4]].forEach(([x, y, r]) => { g += `<circle cx="${x}" cy="${y}" r="${r}" fill="#e6ccff" opacity=".8"/>`; });
-  return job("assets/img/rival_octopus.png", 200, 170, g, defs);
+function rivalCrab() {    // Pinça the crab: a wide red shell, big claws up, eyes on stalks
+  const u = "rk", c = "#ff5a4a";
+  const defs = rad(`${u}b`, [[0, "#ffc0a8"], [0.5, c], [1, "#c8302a"]], 0.45, 0.3, 0.8) + blur(`${u}bl`, 3);
+  let g = rivalShadow(u, 64);
+  // legs on both sides
+  [[-1, 112], [-1, 124], [-1, 136], [1, 112], [1, 124], [1, 136]].forEach(([m, y]) => {
+    const x0 = 100 + m * 50, d = `M${x0} ${y} q${m * 18} 4 ${m * 26} 22`;
+    g += `<path d="${d}" fill="none" stroke="${INK}" stroke-width="11" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${c}" stroke-width="5" stroke-linecap="round"/>`; });
+  // claws raised
+  [[-1], [1]].forEach(([m]) => {
+    const ax = 100 + m * 56, d = `M${ax} 104 Q${ax + m * 22} 92 ${ax + m * 22} 66`;
+    g += `<path d="${d}" fill="none" stroke="${INK}" stroke-width="15" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${c}" stroke-width="8" stroke-linecap="round"/>`;
+    const cx = ax + m * 22, cy = 52;
+    g += `<path d="M${cx - 16} ${cy + 12} Q${cx - 22} ${cy - 16} ${cx - 2} ${cy - 22} L${cx} ${cy - 4} L${cx + 6} ${cy - 22} Q${cx + 24} ${cy - 14} ${cx + 16} ${cy + 12} Q${cx} ${cy + 22} ${cx - 16} ${cy + 12} Z" fill="url(#${u}b)" ${stk(3.5)}/>`;
+  });
+  // eye stalks (behind the shell top)
+  [86, 114].forEach((x) => { g += `<path d="M${x} 96 V70" stroke="${INK}" stroke-width="9" stroke-linecap="round"/><path d="M${x} 96 V70" stroke="${c}" stroke-width="4" stroke-linecap="round"/><circle cx="${x}" cy="66" r="8" fill="#fff" ${stk(3)}/><circle cx="${x}" cy="64" r="4.5" fill="${INK}"/>`; });
+  // shell (carapace) seen from behind
+  g += `<path d="M40 118 Q44 82 100 80 Q156 82 160 118 Q150 146 100 148 Q50 146 40 118 Z" fill="url(#${u}b)" ${stk(4)}/>`;
+  [[76, 104], [124, 104], [100, 124]].forEach(([x, y]) => { g += `<circle cx="${x}" cy="${y}" r="5" fill="#ffd2c0" opacity=".7"/>`; });
+  g += `<path d="M58 106 Q70 90 92 88" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".5"/>`;
+  return job("assets/img/rival_crab.png", 200, 170, g, defs);
 }
 function rivalWhale() {   // Baleino the whale: a big blue back, tail flukes in front, a spout of bubbles
   const u = "rw", c = "#4f86d8";
@@ -303,11 +292,11 @@ function rivalWhale() {   // Baleino the whale: a big blue back, tail flukes in 
   let g = rivalShadow(u, 84);
   [[100, 20, 8], [87, 13, 5], [113, 12, 5], [94, 30, 4]].forEach(([x, y, r]) => { g += `<circle cx="${x}" cy="${y}" r="${r}" fill="#e8f9ff" ${stk(2.5)}/>`; });
   g += eyeSide(14, 104, 8, -1) + eyeSide(186, 104, 8, 1);
-  g += `<path d="M14 120 Q20 52 100 44 Q180 52 186 120 Q160 150 100 150 Q40 150 14 120 Z" fill="url(#${u}b)" ${stk(4)}/>`;
+  g += `<path d="M14 116 Q20 52 100 44 Q180 52 186 116 Q160 144 100 144 Q40 144 14 116 Z" fill="url(#${u}b)" ${stk(4)}/>`;
   g += `<ellipse cx="100" cy="46" rx="9" ry="4" fill="#2f5aa8" ${stk(2.5)}/>`;
   g += `<path d="M40 80 Q70 58 110 56" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity=".45"/>`;
   // tail flukes, lifted above the body base, with the central notch
-  g += `<path d="M100 104 Q78 120 46 112 Q54 136 82 134 Q94 132 100 124 Q106 132 118 134 Q146 136 154 112 Q122 120 100 104 Z" fill="${c}" ${stk(3.5)}/><path d="M100 110 V124" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>`;
+  g += `<path d="M100 136 Q78 150 50 144 Q58 166 84 164 Q94 162 100 156 Q106 162 116 164 Q142 166 150 144 Q122 150 100 136 Z" fill="#2f5aa8" ${stk(3.5)}/>`;
   return job("assets/img/rival_whale.png", 200, 170, g, defs);
 }
 
@@ -522,20 +511,26 @@ function statue() {   // golden turtle trophy statue on a stone plinth (unlock; 
 }
 
 /* ======================= Stations ======================= */
-function eggHouse() {   // Poulepi's home: an egg-shaped house with a round door, a window and a bubbling chimney (rest)
-  const W = 240, H = 240, u = "eh";
-  const defs = blur(`${u}bl`, 4) + glow(`${u}g`, 5) + rad(`${u}e`, [[0, "#ffffff"], [0.6, "#fff4dc"], [1, "#f0d2a0"]], 0.38, 0.3, 0.85) + lin(`${u}r`, [[0, "#ff9a6a"], [1, "#e0603a"]]);
-  let g = shadowE(120, 228, 96, `${u}bl`);
-  g += `<path d="M120 20 C40 20 22 150 34 196 Q42 228 120 230 Q198 228 206 196 C218 150 200 20 120 20 Z" fill="url(#${u}e)" ${stk(5)}/>`;
-  // a crack line like a hatched egg, turned into a roof edge
-  g += `<path d="M36 112 L62 96 L84 114 L108 94 L132 114 L156 94 L180 114 L204 98" fill="none" stroke="#e0b070" stroke-width="5" stroke-linejoin="round"/>`;
-  [[70, 160], [178, 70], [64, 60]].forEach(([x, y]) => { g += `<ellipse cx="${x}" cy="${y}" rx="10" ry="7" fill="#ffc8a0" opacity=".7"/>`; });
-  g += `<rect x="150" y="6" width="22" height="32" rx="6" fill="url(#${u}r)" ${stk(4)}/>`;
-  [[162, 6, 6], [174, -6, 4]].forEach(([x, y, r]) => { g += `<circle cx="${x}" cy="${y + 14}" r="${r}" fill="#e8f9ff" stroke="#fff" stroke-width="2"/>`; });
-  g += `<path d="M96 230 V180 A24 24 0 0 1 144 180 V230 Z" fill="url(#${u}r)" ${stk(4.5)}/><circle cx="134" cy="200" r="3.5" fill="#ffd23f" ${stk(2)}/>`;
-  g += `<circle cx="120" cy="140" r="20" fill="#ffe9a0" ${stk(4)} filter="url(#${u}g)"/><path d="M100 140 H140 M120 120 V160" stroke="${INK}" stroke-width="3"/>`;
-  g += `<path d="M64 60 Q76 36 104 30" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".8"/>`;
-  return job("assets/img/egg_house.png", W, H, g, defs);
+function jarHouse() {   // Poulpy's home: a big terracotta amphora (octopuses love jars!) with a round door and a window (rest)
+  const W = 240, H = 250, u = "jh";
+  const defs = blur(`${u}bl`, 4) + glow(`${u}g`, 5) + rad(`${u}j`, [[0, "#ffd2a8"], [0.55, "#e8915a"], [1, "#b85a2a"]], 0.38, 0.32, 0.8) + lin(`${u}d`, [[0, "#5aa9d6"], [1, "#2f6fa8"]]);
+  let g = shadowE(120, 240, 90, `${u}bl`);
+  // handles
+  g += `<path d="M78 70 Q40 60 44 100 Q48 120 70 118" fill="none" stroke="${INK}" stroke-width="18" stroke-linecap="round"/><path d="M78 70 Q40 60 44 100 Q48 120 70 118" fill="none" stroke="#d9804a" stroke-width="10" stroke-linecap="round"/>`;
+  g += `<path d="M162 70 Q200 60 196 100 Q192 120 170 118" fill="none" stroke="${INK}" stroke-width="18" stroke-linecap="round"/><path d="M162 70 Q200 60 196 100 Q192 120 170 118" fill="none" stroke="#d9804a" stroke-width="10" stroke-linecap="round"/>`;
+  // body + neck + rim
+  g += `<path d="M90 46 L90 70 Q30 96 34 160 Q40 236 120 238 Q200 236 206 160 Q210 96 150 70 L150 46 Z" fill="url(#${u}j)" ${stk(5)}/>`;
+  g += `<rect x="78" y="30" width="84" height="22" rx="10" fill="#e8915a" ${stk(5)}/>`;
+  // painted band of waves
+  let wv = "M44 130"; for (let k = 0; k < 8; k++) wv += ` q10 -12 20 0`;
+  g += `<path d="${wv}" fill="none" stroke="#fff3e0" stroke-width="6" stroke-linecap="round" opacity=".85" transform="translate(-4 0)"/>`;
+  g += `<path d="M60 112 Q70 88 96 80" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".5"/>`;
+  // round door + porthole
+  g += `<path d="M96 238 V200 A24 24 0 0 1 144 200 V238 Z" fill="url(#${u}d)" ${stk(4.5)}/><circle cx="134" cy="218" r="3.5" fill="#ffd23f" ${stk(2)}/>`;
+  g += `<circle cx="160" cy="160" r="16" fill="#ffe9a0" ${stk(4)} filter="url(#${u}g)"/><path d="M146 160 H174 M160 146 V174" stroke="${INK}" stroke-width="3"/>`;
+  // a sprig of seaweed growing out of the neck + bubbles
+  g += `<path d="M112 32 Q104 14 112 4 M124 32 Q132 16 128 6" fill="none" stroke="${INK}" stroke-width="10" stroke-linecap="round"/><path d="M112 32 Q104 14 112 4 M124 32 Q132 16 128 6" fill="none" stroke="#5fb85a" stroke-width="5" stroke-linecap="round"/>`;
+  return job("assets/img/jar_house.png", W, H, g, defs);
 }
 function mapBoard() {   // treasure-hunt board: a wooden sign with a treasure map, a chest and a bottle (missions)
   const W = 240, H = 220, u = "mb";
@@ -669,9 +664,9 @@ const GAME_ICONS = {
     return { defs: d, body: b }; },
   brush: () => { const r = sponge(); return { defs: lin("sp", [[0, "#fff38a"], [1, "#ffc93c"]]), body: `<g transform="translate(64 64) scale(1.05) translate(-64 -60)">${r.svg.replace(/^.*?<\/defs>/, "").replace(/<\/svg>$/, "")}</g>` }; },
   turtle: () => { const r = turtle({ v: "vert", uid: "itu" }); return { defs: r.defs, body: `<g transform="translate(66 70) scale(0.94) translate(-64 -72)">${r.body}</g>` }; },
-  chick: () => { const r = chick("down", 0, false, "ich"); return { defs: r.defs, body: `<g transform="translate(64 64) scale(1.0) translate(-64 -66)">${r.body}</g>` }; },
-  ride: () => { const t = turtle({ v: "vert", uid: "irt" }), c = chick("left", 0, false, "irc", { seated: true });
-    return { defs: t.defs + c.defs, body: `<g transform="translate(64 118) scale(0.98) translate(-66 -104)">${t.body}</g><g transform="translate(70 76) scale(0.5) translate(-64 -118)">${c.body}</g>` }; },
+  octo: () => { const r = octo("down", 0, false, "ioc"); return { defs: r.defs, body: `<g transform="translate(64 64) scale(1.06) translate(-64 -70)">${r.body}</g>` }; },
+  ride: () => { const t = turtle({ v: "vert", uid: "irt" }), c = octo("left", 0, false, "irc", { seated: true });
+    return { defs: t.defs + c.defs, body: `<g transform="translate(64 118) scale(0.98) translate(-66 -104)">${t.body}</g><g transform="translate(70 64) scale(0.66) translate(-64 -96)">${c.body}</g>` }; },
   chest: () => ({ defs: chestDefs("ich"), body: chest(64, 116, 1.0, "ich", true) }),
   map: () => { const defs = lin("imp", [[0, "#fff6dc"], [1, "#f0d9a0"]]);
     let b = `<path d="M14 26 L46 16 L82 28 L114 18 V102 L82 112 L46 100 L14 110 Z" fill="url(#imp)" ${ist(7)}/><path d="M46 16 V100 M82 28 V112" stroke="${INK}" stroke-width="4" opacity=".5"/>`;
@@ -705,10 +700,10 @@ const GAME_ICONS = {
 function gameIcons() { return Object.entries(GAME_ICONS).map(([n, fn]) => { const r = fn(); return IK.job(`assets/ui/icons/${n}.png`, r.body, r.defs); }); }
 
 /* ======================= App icon, logo, home splash ======================= */
-// Poulepi riding his turtle, on the sea backdrop. `safe` < 1 shrinks it into the maskable safe zone.
+// Poulpy riding his turtle, on the sea backdrop. `safe` < 1 shrinks it into the maskable safe zone.
 function riderGroup(v, u, look) {
-  const t = turtle({ v, uid: u + "t", happy: true }), c = chick("left", 0, false, u + "c", { seated: true });
-  return { defs: t.defs + c.defs, body: `<g>${t.body}</g><g transform="translate(70 48) scale(0.66) translate(-64 -118)">${c.body}</g>` };
+  const t = turtle({ v, uid: u + "t", happy: true }), c = octo("left", 0, false, u + "c", { seated: true });
+  return { defs: t.defs + c.defs, body: `<g>${t.body}</g><g transform="translate(70 52) scale(0.8) translate(-64 -96)">${c.body}</g>` };
 }
 function icon(file, size, safe = 1) {
   const S = 512, r = riderGroup("vert", "i");
@@ -717,7 +712,7 @@ function icon(file, size, safe = 1) {
   g += `<g transform="translate(262 316) scale(${2.95 * safe}) translate(-64 -64)">${r.body}</g>`;
   return Object.assign(job(file, S, S, g, waterDefs() + r.defs + rad("ih", [[0, "#ffffff", 0.45], [1, "#ffffff", 0]])), { scale: size / S });
 }
-function logo() {   // Poulepi on his turtle with bubbles and a pearl (the title itself is HTML text under it)
+function logo() {   // Poulpy on his turtle with bubbles and a pearl (the title itself is HTML text under it)
   const W = 420, H = 300, r = riderGroup("vert", "l");
   const fish = (x, y, s, c, m) => `<g transform="translate(${x} ${y}) scale(${s * m} ${s})"><path d="M-20 0 Q0 -16 20 0 Q0 16 -20 0 Z M20 0 L32 -10 L30 10 Z" fill="${c}" ${stk(3)}/><circle cx="-10" cy="-2" r="3" fill="${INK}"/></g>`;
   let g = `<ellipse cx="210" cy="170" rx="200" ry="130" fill="url(#lh)"/>`;
@@ -726,7 +721,7 @@ function logo() {   // Poulepi on his turtle with bubbles and a pearl (the title
   [[60, 200, 12], [80, 236, 7], [340, 140, 10], [320, 112, 6], [210, 20, 8]].forEach(([x, y, q]) => { g += `<circle cx="${x}" cy="${y}" r="${q}" fill="#e8f9ff" fill-opacity=".35" stroke="#fff" stroke-width="2.5"/><circle cx="${x - q * 0.35}" cy="${y - q * 0.35}" r="${q * 0.3}" fill="#fff"/>`; });
   return job("assets/img/logo.png", W, H, g, r.defs + rad("lh", [[0, "#bff2ff", 0.55], [1, "#bff2ff", 0]]));
 }
-function splash() {   // the underwater city at the bottom, Poulepi and friends in the middle band
+function splash() {   // the underwater city at the bottom, turtles and sea friends in the middle band
   const W = 900, H = 1600, R = rng(77);
   let defs = waterDefs() + blur("sbl", 3);
   let g = water(W, H, 4, { sandY: 0.8, bubbles: 40 });
@@ -765,12 +760,12 @@ const HIDPI = [
 ];
 const LAGOON = { w: 640, h: 460 };   // = zones[0].rect size in game.config.js
 function build(jobs) {
-  jobs.push(chickSheet(), chickThumb(), chickRide(), chickBack());
+  jobs.push(octoSheet(), octoThumb(), octoRide(), octoBack());
   Object.keys(TURTLES).forEach((v) => jobs.push(turtleSheet(v), turtleThumb(v), turtleBack(v), closeup(v, false), closeup(v, true)));
-  jobs.push(rivalClown(), rivalPuffer(), rivalRay(), rivalOctopus(), rivalWhale(), jellyfish(), seaRock("rock", 4, true), seaRock("rock_b", 9, false), startGate());
+  jobs.push(rivalClown(), rivalPuffer(), rivalRay(), rivalCrab(), rivalWhale(), jellyfish(), seaRock("rock", 4, true), seaRock("rock_b", 9, false), startGate());
   jobs.push(ground(), plazaTile(), lagoonFloor(LAGOON.w, LAGOON.h), kelp(), coral("coral_pink", "#ff8fb8", 3), coral("coral_orange", "#ffa04a", 7),
     house("house_shell", "shell"), house("house_tower", "tower"), house("house_dome", "dome"), lamp(), vent(),
-    starfish("starfish", "#ff9f43"), starfish("starfish_b", "#ff6fa5"), clam(), statue(), eggHouse(), mapBoard(), chestMarker());
+    starfish("starfish", "#ff9f43"), starfish("starfish_b", "#ff6fa5"), clam(), statue(), jarHouse(), mapBoard(), chestMarker());
   jobs.push(algae("algae", "#6cbf5a", 2), algae("algae_b", "#a8a050", 6), sponge(), wantBubble());
   jobs.push(icon("assets/favicon.png", 512), icon("assets/apple-touch-icon.png", 180), icon("assets/icon-192.png", 192), icon("assets/icon-maskable.png", 512, 0.8), logo(), splash());
   jobs.push(...gameIcons(), ...IK.jobs(PAL, ["star", "heart", "heartEmpty", "sound", "soundOff", "help", "avatar", "goals", "close", "play", "resume", "check", "calendar", "gift", "hand", "sparkle", "moon", "refresh", "arrow", "trophy", "palette", "battery", "smile", "meh", "sad", "joy", "home", "lock"]));
