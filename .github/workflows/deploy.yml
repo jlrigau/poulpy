@@ -1,0 +1,59 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Permissions needed to deploy to GitHub Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          # Enable Pages (build type "workflow") if it isn't already, so the very
+          # first deploy doesn't fail with "Get Pages site failed".
+          enablement: true
+
+      # The template itself publishes no game: its address only forwards to the Ludea site.
+      # A game created from the template is not a template repo, so it publishes the game.
+      - name: Template publishes only a redirect
+        if: ${{ github.event.repository.is_template }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/site"
+          printf '%s\n' '<!doctype html><meta charset="utf-8"><title>Ludea</title>' \
+            '<meta http-equiv="refresh" content="0; url=https://ludea.ai/">' \
+            '<link rel="canonical" href="https://ludea.ai/">' \
+            '<p><a href="https://ludea.ai/">ludea.ai</a></p>' > "$RUNNER_TEMP/site/index.html"
+          cp "$RUNNER_TEMP/site/index.html" "$RUNNER_TEMP/site/404.html"
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp "$RUNNER_TEMP/site/"*.html .
+
+      - name: Upload site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # The site is static and lives at the repo root.
+          path: "."
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

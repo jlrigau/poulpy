@@ -1,0 +1,35 @@
+/* ===== Theme — "Nebula Nursery" (space / neon) =====
+   Only the look lives here: the generic structure is in engine.css.
+   Restyle a game by changing these variables (and the font). */
+
+@font-face {
+  font-family: "Fredoka"; font-style: normal; font-weight: 300 700; font-display: swap;
+  src: url("vendor/fonts/fredoka-latin.woff2") format("woff2");
+}
+
+:root {
+  --game-font: "Fredoka", ui-rounded, "Trebuchet MS", system-ui, sans-serif;
+  --deep: #0b1029;
+  --panel: #1f2a5a; --panel2: #18214a; --panel-edge: #111839;
+  --sheet-bg: rgba(24, 31, 72, 0.82); --sheet-fade: rgba(5, 8, 30, 0.55);
+  --text: #eef2ff; --muted: #a5b0e0; --title: #ffffff;
+  --title-fill: #ffffff; --title-stroke: #2a1d6e;
+  --primary: #3fe0e8; --primary-d: #1b98aa; --on-primary: #0b2142;
+  --accent: #ff5db1; --accent-d: #b8327a; --on-accent: #ffffff;
+  --ribbon: #8b5cff; --ribbon-d: #5532b8;
+  --good: #6ef0a0; --warn: #ffc24a; --bad: #ff6a8a;
+  --border: #2c3a7a; --input-bg: #121a3e;
+  --chip-bg: rgba(24, 32, 78, 0.78); --chip-text: #f1f4ff; --chip-edge: rgba(8, 12, 40, 0.9);
+  --overlay: rgba(3, 5, 20, 0.62);
+  --night: #02030c;
+  --hud-fade: rgba(4, 6, 24, 0.55);
+  --shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+  --glow: 0 0 26px rgba(63, 224, 232, 0.14);
+  --closeup-bg: #0b1029;
+  --edge-home: #221f5a; --edge-game: #0e1430;   /* colours at the screen edges (iOS bands) */
+  --home-bg: #120c34;
+}
+.btn-primary { --fg: #ffffff; }
+.btn-secondary { --fg: #bff6ff; }
+.pc-needs { background: rgba(0, 0, 0, 0.22); }
+.gauge { background: rgba(0, 0, 0, 0.35); }

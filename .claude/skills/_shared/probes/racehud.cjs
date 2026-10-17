@@ -1,0 +1,39 @@
+/*
+ * racehud — the race HUD (time / distance / speed chips + quit) must stay on ONE row, chips must
+ * not overlap, and each value must stay inside its pill, even with the longest values.
+ * Regression for: the speed chip wrapping to a second row on iPhone ("102 km/h").
+ *   OUT=/tmp/x node .claude/skills/_shared/playtest.cjs --engine webkit --device "iPhone 13" --probe .claude/skills/_shared/probes/racehud.cjs
+ * Run on several widths: "iPhone 13" (390), "Galaxy S8" (360), "iPhone SE" (320).
+ */
+module.exports = async (page) => {
+  const can = await page.evaluate(() => !!(GAME.race && GAME.creature && GAME.creature.ride));
+  if (!can) return { skipped: "no race", errors: [] };
+  await page.evaluate(async () => { const c = state.creatures.find((q) => !isYoung(q)); player.x = c.x - 60; player.y = c.y; activeTarget = c; creatureAction(GAME.creature.actions.find((a) => a.type === "ride").id); startRace(); });
+  await new Promise((r) => setTimeout(r, 1500));
+  const out = [];
+  for (const [t, d, v] of [["9.9s", "9 m", "8 km/h"], ["58.8s", "4413 m", "210 km/h"], ["108.8s", "12345 m", "388 km/h"]]) {
+    out.push(await page.evaluate(([t, d, v]) => {
+      R3.on = false;    // freeze the HUD updates
+      // the middle chip is the distance, or the live place "n/N" in a race with rivals (longest label: "6th/6")
+      const mid = document.getElementById("rh-dist") ? "rh-dist" : "rh-place";
+      document.querySelector("#rh-time b").textContent = t; document.querySelector("#" + mid + " b").textContent = mid === "rh-dist" ? d : "6th/6"; document.querySelector("#rh-speed b").textContent = v;
+      const r = (id) => document.getElementById(id).getBoundingClientRect();
+      const ids = ["rh-time", mid, "rh-speed", "rh-quit"], b = ids.map(r);
+      const spill = ids.slice(0, 3).some((id) => { const c = r(id), t = document.querySelector("#" + id + " b").getBoundingClientRect(); return t.right > c.right - 2 || t.left < c.left; });
+      const oneRow = b.every((x) => Math.abs(x.top - b[0].top) < 12);
+      const overlap = b.slice(0, -1).some((x, i) => x.right > b[i + 1].left + 1);
+      return { vals: [t, d, v], oneRow, overlap, spill, fits: b[3].right <= innerWidth, w: b.map((x) => Math.round(x.width)) };
+    }, [t, d, v]));
+  }
+  // the ride's need gauge (race.showNeed): its own row under the chips, inside the screen, shows the real value
+  const need = await page.evaluate(async () => {
+    const el = document.getElementById("rh-need"); if (!el) return null;
+    const k = GAME.creature.ride.fatigueNeed; mounted[k] = 18; r3Hud(false); await new Promise((x) => setTimeout(x, 400));
+    const a = el.getBoundingClientRect(), top = document.querySelector(".rh-top").getBoundingClientRect();
+    return { below: a.top >= top.bottom - 1, inside: a.left >= 0 && a.right <= innerWidth, text: el.querySelector("b").textContent, low: el.classList.contains("low") };
+  });
+  await page.screenshot({ path: process.env.OUT + "/racehud.png" });
+  const errors = out.filter((o) => !o.oneRow || o.overlap || !o.fits || o.spill).map((o) => "race HUD breaks with " + o.vals.join(" / "));
+  if (need && !(need.below && need.inside && need.text === "18%" && need.low)) errors.push("race need gauge wrong: " + JSON.stringify(need));
+  return { out, need, errors };
+};
