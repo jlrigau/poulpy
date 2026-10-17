@@ -18,11 +18,23 @@ const SAND = "#ecd9a2";
 
 /* ======================= Poulpy, the little octopus ======================= */
 const OCTO = { body: "#ff8fa3", bodyD: "#e0567a", light: "#ffe0e7", spot: "#ffc4d1", cheek: "#ff4f7b" };
-// one tentacle: from (x0,y0) via (cx,cy) to (x1,y1), tip curled towards `curl` (-1 left / +1 right)
+// one tentacle as a filled, tapering shape: from (x0,y0) via (cx,cy) to (x1,y1), then a small curl at the
+// tip turning towards `curl` (-1 left / +1 right). Width goes from w at the root to ~0.3w at the tip.
 function tentacle(x0, y0, cx, cy, x1, y1, curl, w, col) {
-  const d = `M${f2(x0)} ${f2(y0)} Q${f2(cx)} ${f2(cy)} ${f2(x1)} ${f2(y1)} q${f2(curl * 7)} ${f2(5)} ${f2(curl * 1)} ${f2(10)}`;
-  return `<path d="${d}" fill="none" stroke="${INK}" stroke-width="${w + 6}" stroke-linecap="round" stroke-linejoin="round"/>` +
-    `<path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  const pts = [];
+  for (let i = 0; i <= 14; i++) { const t = i / 14, a = (1 - t) * (1 - t), b = 2 * (1 - t) * t, c = t * t; pts.push([a * x0 + b * cx + c * x1, a * y0 + b * cy + c * y1]); }
+  // the curl: continue from the end direction and turn ~240° on a radius shrinking to 0
+  const [px, py] = pts[pts.length - 2]; let ang = Math.atan2(y1 - py, x1 - px), R = w * 0.55, x = x1, y = y1;
+  for (let i = 0; i < 8; i++) { ang += curl * 0.52; R *= 0.92; x += Math.cos(ang) * R; y += Math.sin(ang) * R; pts.push([x, y]); }
+  const n = pts.length, L = [], Rr = [];
+  for (let i = 0; i < n; i++) {
+    const p0 = pts[Math.max(0, i - 1)], p1 = pts[Math.min(n - 1, i + 1)], dx = p1[0] - p0[0], dy = p1[1] - p0[1], d = Math.hypot(dx, dy) || 1;
+    const hw = (w / 2) * (1 - 0.6 * i / (n - 1)), nx = -dy / d, ny = dx / d;
+    L.push([pts[i][0] + nx * hw, pts[i][1] + ny * hw]); Rr.push([pts[i][0] - nx * hw, pts[i][1] - ny * hw]);
+  }
+  const tip = pts[n - 1], ring = L.concat([tip], Rr.reverse());
+  const d = "M" + ring.map((q) => f2(q[0]) + " " + f2(q[1])).join(" L") + " Z";
+  return `<path d="${d}" fill="${col}" stroke="${INK}" stroke-width="2.6" stroke-linejoin="round"/>`;
 }
 const octoDefs = (u) => rad(`${u}b`, [[0, "#fff2f5"], [0.45, OCTO.body], [1, OCTO.bodyD]], 0.4, 0.28, 0.8);
 // the spotty mantle (head) centred on (cx, cy)
@@ -48,26 +60,29 @@ function octo(dir, phase, moving, u, opt) {
   const wv = (k) => (moving ? Math.sin(phase + k * 1.3) : 0);
   const defs = octoDefs(u);
   let g = `<g transform="translate(0 ${f2(bob)})">`;
-  const W = 9, C = P.body, CD = shade(P.body, -0.1);
+  const W = 12, C = P.body, CD = shade(P.body, -0.1);
   if (seated && side) {
     // sitting on the shell: two tentacles draped down the front, two down the back, curled tips
-    g += tentacle(78, 84, 92, 96, 100, 110, 1, W, CD) + tentacle(50, 84, 40, 96, 36, 110, -1, W, CD);
-    g += tentacle(70, 86, 76, 100, 84, 116, 1, W, C) + tentacle(56, 86, 50, 100, 46, 116, -1, W, C);
-    g += mantle(u, 66, 56, 31, 29, 8);
-    g += octoEye(52, 64, 1, opt.happy, -1) + `<ellipse cx="44" cy="76" rx="5" ry="3" fill="${P.cheek}" opacity=".45"/>`;
-    g += `<path d="M38 77 Q42 80 46 78" fill="none" ${stk(2.6)}/>`;
+    // sitting on the shell: tentacles draped along the dome, front pair down the front, back pair down the back
+    g += tentacle(76, 88, 108, 88, 110, 114, 1, W + 1, CD) + tentacle(54, 88, 26, 90, 26, 114, -1, W + 1, CD);
+    g += tentacle(72, 92, 100, 96, 98, 118, 1, W + 1, C) + tentacle(58, 92, 34, 98, 38, 118, -1, W + 1, C);
+    g += tentacle(66, 94, 70, 106, 76, 118, 1, W, C);
+    g += mantle(u, 66, 64, 31, 29, 8);
+    g += octoEye(56, 70, 1, opt.happy, -1) + `<ellipse cx="46" cy="81" rx="5" ry="3" fill="${P.cheek}" opacity=".45"/>`;
+    g += `<path d="M44 82 Q48 85 52 83" fill="none" ${stk(2.6)}/>`;
   } else if (side) {
     // walking to the left: tentacles reach forward and trail behind, alternating
-    const t = [[50, -1, 30, 104], [58, -1, 42, 108], [66, 1, 60, 108], [74, 1, 82, 108], [82, 1, 100, 106], [88, 1, 110, 100]];
-    t.forEach(([x0, c, x1, y1], k) => {
-      const dx = wv(k) * 6, dy = Math.max(0, wv(k + 1)) * -5;
-      g += tentacle(x0, 80, (x0 + x1) / 2 + c * 2, 98, x1 + dx, y1 + dy, c, W, k % 2 ? C : CD);
-    });
+    // far tentacles (dark) first, then the near ones; roots staggered, lengths varied
+    const far = [[56, 76, -1, 36, 98], [72, 76, 1, 92, 104], [84, 78, 1, 112, 96]];
+    const near = [[50, 82, -1, 28, 104], [60, 84, -1, 44, 110], [70, 84, 1, 66, 112], [78, 82, 1, 88, 110], [86, 80, 1, 106, 104]];
+    far.forEach(([x0, y0, c, x1, y1], k) => { g += tentacle(x0, y0, (x0 + x1) / 2, y0 + 16, x1 + wv(k + 3) * 6, y1 - Math.max(0, wv(k + 4)) * 5, c, W - 1, CD); });
+    near.forEach(([x0, y0, c, x1, y1], k) => { g += tentacle(x0, y0, (x0 + x1) / 2, y0 + 16, x1 + wv(k) * 6, y1 - Math.max(0, wv(k + 1)) * 5, c, W, C); });
     g += mantle(u, 68, 50, 32, 30, 10);
-    g += octoEye(54, 60, 1, opt.happy, -1) + `<ellipse cx="46" cy="72" rx="5" ry="3" fill="${P.cheek}" opacity=".45"/>`;
-    g += `<path d="M40 73 Q44 76 48 74" fill="none" ${stk(2.6)}/>`;
+    g += octoEye(58, 60, 1, opt.happy, -1) + `<ellipse cx="48" cy="71" rx="5" ry="3" fill="${P.cheek}" opacity=".45"/>`;
+    g += `<path d="M46 73 Q50 76 54 74" fill="none" ${stk(2.6)}/>`;
   } else {
     // front / back: six tentacles fanning out under the mantle
+    g += tentacle(50, 76, 40, 90, 32, 96, -1, W - 1, CD) + tentacle(78, 76, 88, 90, 96, 96, 1, W - 1, CD);
     const t = [[44, 22, 108], [52, 34, 116], [60, 52, 120], [68, 76, 120], [76, 94, 116], [84, 106, 108]];
     t.forEach(([x0, x1, y1], k) => {
       const c = x1 < 64 ? -1 : 1, dx = wv(k) * 4, dy = Math.max(0, wv(k + 2)) * -5;
@@ -88,7 +103,7 @@ function octo(dir, phase, moving, u, opt) {
 function octoFrame(dir, i, u) {
   const moving = i > 0, ph = moving ? ((i - 1) / 8) * Math.PI * 2 : 0;
   const r = octo(dir === "right" ? "left" : dir, ph, moving, u);
-  const body = `<g transform="translate(64 124) scale(0.86) translate(-64 -124)">${r.body}</g>`;
+  const body = `<g transform="translate(64 121) scale(0.84) translate(-64 -127)">${r.body}</g>`;
   return { defs: r.defs, body: dir === "right" ? `<g transform="translate(128 0) scale(-1 1)">${body}</g>` : body };
 }
 function octoSheet() {
@@ -215,8 +230,10 @@ function turtleBack(v) {
 function octoBack() {
   const u = "ob", C = OCTO.body, CD = shade(OCTO.body, -0.1);
   let g = "";
-  [[88, 70, 96, -1, CD], [112, 130, 96, 1, CD], [94, 58, 104, -1, C], [106, 142, 104, 1, C], [98, 84, 112, -1, C], [102, 116, 112, 1, C]].forEach(([x0, x1, y1, c, col]) => {
-    g += tentacle(x0, 62, (x0 + x1) / 2, y1 - 22, x1, y1 - 6, c, 10, col); });
+  // tentacles drape over the dome (control points on the shell's curve), tips curling down over the rim
+  [[88, 72, 70, 84, 112, -1, CD], [112, 128, 70, 116, 112, 1, CD],
+   [92, 50, 72, 44, 112, -1, C], [108, 150, 72, 156, 112, 1, C], [96, 72, 82, 66, 122, -1, C], [104, 128, 82, 134, 122, 1, C]].forEach(([x0, cx, cy, x1, y1, c, col]) => {
+    g += tentacle(x0, 58, cx, cy, x1, y1, c, 11, col); });
   g += mantle(u, 100, 36, 30, 29, 0);
   g += `<ellipse cx="90" cy="50" rx="5" ry="4" fill="${OCTO.spot}"/><ellipse cx="112" cy="54" rx="4" ry="3.4" fill="${OCTO.spot}"/>`;
   return job("assets/img/rider_back_poulpy.png", 200, 170, g, octoDefs(u));
@@ -279,7 +296,7 @@ function rivalCrab() {    // Pinça the crab: a wide red shell, big claws up, ey
     g += `<path d="M${cx - 16} ${cy + 12} Q${cx - 22} ${cy - 16} ${cx - 2} ${cy - 22} L${cx} ${cy - 4} L${cx + 6} ${cy - 22} Q${cx + 24} ${cy - 14} ${cx + 16} ${cy + 12} Q${cx} ${cy + 22} ${cx - 16} ${cy + 12} Z" fill="url(#${u}b)" ${stk(3.5)}/>`;
   });
   // eye stalks (behind the shell top)
-  [86, 114].forEach((x) => { g += `<path d="M${x} 96 V70" stroke="${INK}" stroke-width="9" stroke-linecap="round"/><path d="M${x} 96 V70" stroke="${c}" stroke-width="4" stroke-linecap="round"/><circle cx="${x}" cy="66" r="8" fill="#fff" ${stk(3)}/><circle cx="${x}" cy="64" r="4.5" fill="${INK}"/>`; });
+  [86, 114].forEach((x) => { g += `<path d="M${x} 96 V70" stroke="${INK}" stroke-width="9" stroke-linecap="round"/><path d="M${x} 96 V70" stroke="${c}" stroke-width="4" stroke-linecap="round"/><circle cx="${x}" cy="66" r="8" fill="#fff" ${stk(3)}/><circle cx="${x + (x < 100 ? -3 : 3)}" cy="61" r="4" fill="${INK}"/>`; });
   // shell (carapace) seen from behind
   g += `<path d="M40 118 Q44 82 100 80 Q156 82 160 118 Q150 146 100 148 Q50 146 40 118 Z" fill="url(#${u}b)" ${stk(4)}/>`;
   [[76, 104], [124, 104], [100, 124]].forEach(([x, y]) => { g += `<circle cx="${x}" cy="${y}" r="5" fill="#ffd2c0" opacity=".7"/>`; });
@@ -291,12 +308,15 @@ function rivalWhale() {   // Baleino the whale: a big blue back, tail flukes in 
   const defs = rad(`${u}b`, [[0, "#bcd8ff"], [0.5, c], [1, "#2f5aa8"]], 0.45, 0.25, 0.85) + blur(`${u}bl`, 3);
   let g = rivalShadow(u, 84);
   [[100, 20, 8], [87, 13, 5], [113, 12, 5], [94, 30, 4]].forEach(([x, y, r]) => { g += `<circle cx="${x}" cy="${y}" r="${r}" fill="#e8f9ff" ${stk(2.5)}/>`; });
-  g += eyeSide(14, 104, 8, -1) + eyeSide(186, 104, 8, 1);
-  g += `<path d="M14 116 Q20 52 100 44 Q180 52 186 116 Q160 144 100 144 Q40 144 14 116 Z" fill="url(#${u}b)" ${stk(4)}/>`;
+  g += `<path d="M18 108 Q24 46 100 40 Q176 46 182 108 Q160 134 100 134 Q40 134 18 108 Z" fill="url(#${u}b)" ${stk(4)}/>`;
   g += `<ellipse cx="100" cy="46" rx="9" ry="4" fill="#2f5aa8" ${stk(2.5)}/>`;
   g += `<path d="M40 80 Q70 58 110 56" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity=".45"/>`;
   // tail flukes, lifted above the body base, with the central notch
-  g += `<path d="M100 136 Q78 150 50 144 Q58 166 84 164 Q94 162 100 156 Q106 162 116 164 Q142 166 150 144 Q122 150 100 136 Z" fill="#2f5aa8" ${stk(3.5)}/>`;
+  // the tail rises from the back: a stalk, then flukes with a clear central notch
+  // the tail, nearest to us: a stalk coming out of the body, then big flukes low in front (no eyes: unseen from behind)
+  g += `<path d="M86 118 Q90 132 94 142 L106 142 Q110 132 114 118 Z" fill="#3f70c0" ${stk(3.2)}/>`;
+  g += `<path d="M100 140 Q74 132 30 142 Q40 168 80 166 Q94 164 100 152 Q106 164 120 166 Q160 168 170 142 Q126 132 100 140 Z" fill="#2f5aa8" ${stk(3.5)}/>`;
+  g += `<path d="M44 150 Q66 144 88 150" fill="none" stroke="#7fa8e8" stroke-width="4" stroke-linecap="round" opacity=".7"/>`;
   return job("assets/img/rival_whale.png", 200, 170, g, defs);
 }
 
@@ -529,7 +549,7 @@ function jarHouse() {   // Poulpy's home: a big terracotta amphora (octopuses lo
   g += `<path d="M96 238 V200 A24 24 0 0 1 144 200 V238 Z" fill="url(#${u}d)" ${stk(4.5)}/><circle cx="134" cy="218" r="3.5" fill="#ffd23f" ${stk(2)}/>`;
   g += `<circle cx="160" cy="160" r="16" fill="#ffe9a0" ${stk(4)} filter="url(#${u}g)"/><path d="M146 160 H174 M160 146 V174" stroke="${INK}" stroke-width="3"/>`;
   // a sprig of seaweed growing out of the neck + bubbles
-  g += `<path d="M112 32 Q104 14 112 4 M124 32 Q132 16 128 6" fill="none" stroke="${INK}" stroke-width="10" stroke-linecap="round"/><path d="M112 32 Q104 14 112 4 M124 32 Q132 16 128 6" fill="none" stroke="#5fb85a" stroke-width="5" stroke-linecap="round"/>`;
+  g += `<path d="M112 34 Q104 18 112 10 M124 34 Q132 20 128 12" fill="none" stroke="${INK}" stroke-width="10" stroke-linecap="round"/><path d="M112 34 Q104 18 112 10 M124 34 Q132 20 128 12" fill="none" stroke="#5fb85a" stroke-width="5" stroke-linecap="round"/>`;
   return job("assets/img/jar_house.png", W, H, g, defs);
 }
 function mapBoard() {   // treasure-hunt board: a wooden sign with a treasure map, a chest and a bottle (missions)

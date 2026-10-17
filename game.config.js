@@ -27,7 +27,7 @@ window.GAME = {
     tagline: "Le petit poulpe de la cité sous la mer !",
     saveKey: "poulpy",
     audience: { minAge: 6, maxAge: 8, notes: "young kids 6–8: gentle, cute, no violence, almost no reading needed" },
-    assetVersion: "v3",
+    assetVersion: "v4",
     theme: { home: "#0e4c86", play: "#1670a8", closeup: "#0e4c86" },
     showCoins: true,
     coinIcon: "pearl",
