@@ -591,6 +591,85 @@ function chestMarker() {   // the hidden treasure (mission marker): a glowing cl
   return job("assets/img/chest.png", W, H, g, defs);
 }
 
+/* ======================= Big treasure: the crab thief, the drop-off spot, the rare items ======================= */
+// The crab thief (chase pursuer), seen from the front: crabs walk sideways, so the same drawing serves every
+// direction (dirSheet rows identical); 2 frames = scuttling legs. A black bandit mask says "thief" without words.
+function crabThief(frame, u) {
+  const c = "#ff6a4a", cD = "#c8402a";
+  const defs = rad(`${u}b`, [[0, "#ffc8b0"], [0.5, c], [1, cD]], 0.45, 0.3, 0.8) + blur(`${u}bl`, 2.5);
+  let g = `<ellipse cx="64" cy="112" rx="40" ry="7" fill="${INK}" opacity=".25" filter="url(#${u}bl)"/>`;
+  [-1, 1].forEach((m) => { [0, 1, 2].forEach((k) => {
+    const up = (k + frame) % 2 ? -5 : 3, x0 = 64 + m * 30, y0 = 84 + k * 7, d = `M${x0} ${y0} q${m * 14} ${-4 + up} ${m * 22} ${14 + up}`;
+    g += `<path d="${d}" fill="none" stroke="${INK}" stroke-width="10" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${c}" stroke-width="5" stroke-linecap="round"/>`; }); });
+  // claws, raised a little, snapping with the frame
+  [-1, 1].forEach((m) => {
+    const ax = 64 + m * 34, d = `M${ax} 76 Q${ax + m * 18} 66 ${ax + m * 18} 50`;
+    g += `<path d="${d}" fill="none" stroke="${INK}" stroke-width="12" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${c}" stroke-width="6" stroke-linecap="round"/>`;
+    const cx = ax + m * 18, cy = 40, o = frame ? 3 : 0;
+    g += `<path d="M${cx - 12} ${cy + 10} Q${cx - 17} ${cy - 12} ${cx - 2} ${cy - 16 - o} L${cx} ${cy - 2} L${cx + 5} ${cy - 16 + o} Q${cx + 18} ${cy - 10} ${cx + 12} ${cy + 10} Q${cx} ${cy + 17} ${cx - 12} ${cy + 10} Z" fill="url(#${u}b)" ${stk(3)}/>`;
+  });
+  // shell
+  g += `<path d="M28 88 Q30 60 64 58 Q98 60 100 88 Q92 106 64 106 Q36 106 28 88 Z" fill="url(#${u}b)" ${stk(3.5)}/>`;
+  g += `<path d="M40 74 Q48 64 62 63" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".55"/>`;
+  // eye stalks + the bandit mask across both eyes (with the knot ties flying on the side)
+  [54, 74].forEach((x) => { g += `<path d="M${x} 66 V48" stroke="${INK}" stroke-width="8" stroke-linecap="round"/><path d="M${x} 66 V48" stroke="${c}" stroke-width="4" stroke-linecap="round"/>`; });
+  g += `<path d="M100 40 Q108 36 112 44 M100 40 Q110 44 108 52" fill="none" stroke="${INK}" stroke-width="4" stroke-linecap="round"/>`;
+  g += `<rect x="40" y="35" width="62" height="14" rx="7" fill="${INK}"/>`;
+  [54, 74].forEach((x) => { g += `<circle cx="${x}" cy="42" r="7" fill="#fff" ${stk(2.4)}/><circle cx="${x + 1.5}" cy="43" r="3.6" fill="${INK}"/><circle cx="${x}" cy="41" r="1.3" fill="#fff"/>`; });
+  // cheeky grin
+  g += `<path d="M54 86 Q64 94 74 86" fill="none" ${stk(3)}/><path d="M60 89 L60 92 M68 89 L68 92" stroke="#fff" stroke-width="2.4"/>`;
+  return { defs, body: g };
+}
+function crabThiefSheet() {
+  let defs = "", frames = [];
+  for (let r = 0; r < 4; r++) for (let f = 0; f < 2; f++) { const x = crabThief(f, `ct${r}${f}`); defs += x.defs; frames.push(`<g transform="translate(64 116) scale(0.84) translate(-64 -116)">${x.body}</g>`); }
+  return job("assets/sheet/crab_thief.png", 256, 512, sheet(frames, 128, 128, 2), defs);
+}
+// Drop-off spot in front of Poulpy's house: a glowing ring of shells on the sand (flat ground decal)
+function homeTarget() {
+  const W = 240, H = 140, u = "ht";
+  const defs = rad(`${u}g`, [[0, "#fff6b0", 0.85], [0.6, "#ffd23f", 0.35], [1, "#ffd23f", 0]]) + glow(`${u}gl`, 4);
+  let g = `<ellipse cx="120" cy="70" rx="116" ry="66" fill="url(#${u}g)"/>`;
+  for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2, x = 120 + Math.cos(a) * 92, y = 70 + Math.sin(a) * 48;
+    g += `<ellipse cx="${f2(x)}" cy="${f2(y)}" rx="11" ry="8" fill="${["#ffe0ec", "#fff3dc", "#e0f2ff"][i % 3]}" ${stk(2.6)}/>`; }
+  g += `<path d="${star(120, 70, 30, 12, 5)}" fill="#ffd23f" ${stk(3)} transform="scale(1 0.62) translate(0 ${f2(70 / 0.62 - 70)})"/>`;
+  return job("assets/img/home_target.png", W, H, g, defs);
+}
+// The rare items of the big treasures, each on a little stone plinth (base y≈150)
+function rareItem(file, kind) {
+  const W = 130, H = 160, u = "ri" + kind;
+  const defs = blur(`${u}bl`, 3) + glow(`${u}gl`, 5) + lin(`${u}g`, [[0, "#fff1a0"], [0.5, "#ffc93c"], [1, "#d8901a"]]) +
+    lin(`${u}s`, [[0, "#d6dde6"], [1, "#8a9ab6"]]) + rad(`${u}h`, [[0, "#fff6b0", 0.6], [1, "#fff6b0", 0]]) + lin(`${u}gl2`, [[0, "#d8fff4", 0.9], [1, "#7fdcc8", 0.75]]);
+  let g = `<ellipse cx="65" cy="60" rx="60" ry="56" fill="url(#${u}h)"/>`;
+  g += shadowE(65, 152, 44, `${u}bl`);
+  g += `<path d="M30 152 L36 112 H94 L100 152 Z" fill="url(#${u}s)" ${stk(3.5)}/><rect x="26" y="102" width="78" height="14" rx="6" fill="url(#${u}s)" ${stk(3.5)}/>`;
+  if (kind === "crown") {
+    g += `<path d="M26 96 L30 52 L48 74 L65 40 L82 74 L100 52 L104 96 Z" fill="url(#${u}g)" ${stk(3.5)}/>`;
+    g += `<rect x="26" y="84" width="78" height="12" rx="4" fill="url(#${u}g)" ${stk(3)}/>`;
+    [[46, 90, "#ff4f7b"], [65, 90, "#3fb7d9"], [84, 90, "#5fd38a"]].forEach(([x, y, c]) => { g += `<circle cx="${x}" cy="${y}" r="4.5" fill="${c}" ${stk(2)}/>`; });
+    [[30, 52], [65, 40], [100, 52]].forEach(([x, y]) => { g += `<circle cx="${x}" cy="${y - 4}" r="5" fill="#fff" ${stk(2.4)}/>`; });
+  } else if (kind === "spyglass") {
+    g += `<path d="M52 102 L64 74 L76 102" fill="none" ${stk(4)}/>`;
+    g += `<g transform="rotate(-24 65 62)"><rect x="22" y="54" width="34" height="18" rx="5" fill="url(#${u}g)" ${stk(3)}/><rect x="54" y="51" width="30" height="24" rx="5" fill="#a0603a" ${stk(3)}/><rect x="82" y="47" width="22" height="32" rx="6" fill="url(#${u}g)" ${stk(3)}/><ellipse cx="104" cy="63" rx="5" ry="15" fill="#bff2ff" ${stk(2.6)}/></g>`;
+  } else if (kind === "bottle") {
+    g += `<g transform="rotate(-12 65 70)"><path d="M50 100 Q42 98 42 86 V62 Q42 52 56 48 V30 H74 V48 Q88 52 88 62 V86 Q88 98 80 100 Z" fill="url(#${u}gl2)" ${stk(3.5)}/>`;
+    g += `<rect x="54" y="20" width="22" height="12" rx="4" fill="#c98a52" ${stk(3)}/><rect x="52" y="60" width="26" height="30" rx="4" fill="#fff6dc" ${stk(2.4)}/><path d="M57 68 H73 M57 75 H73 M57 82 H68" stroke="#c2803a" stroke-width="2.4" stroke-linecap="round"/>`;
+    g += `<path d="M48 64 Q48 54 56 52" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".8"/></g>`;
+  } else if (kind === "anchor") {
+    g += `<circle cx="65" cy="32" r="10" fill="none" stroke="${INK}" stroke-width="11"/><circle cx="65" cy="32" r="10" fill="none" stroke="#ffc93c" stroke-width="5"/>`;
+    g += `<path d="M65 42 V96 M48 54 H82 M34 74 Q38 96 65 98 Q92 96 96 74" fill="none" stroke="${INK}" stroke-width="13" stroke-linecap="round"/>`;
+    g += `<path d="M65 42 V96 M48 54 H82 M34 74 Q38 96 65 98 Q92 96 96 74" fill="none" stroke="#ffc93c" stroke-width="6" stroke-linecap="round"/>`;
+    g += `<path d="M28 80 L34 70 L40 80 Z M90 80 L96 70 L102 80 Z" fill="#ffc93c" ${stk(2.6)}/>`;
+  } else {   // golden scallop shell
+    let fan = "M65 98"; for (let k = 0; k <= 8; k++) { const a = Math.PI * (1.08 + k * 0.105), x = 65 + Math.cos(a) * 46, y = 92 + Math.sin(a) * 58; fan += (k ? " Q" + f2(65 + Math.cos(a - 0.05) * 52) + " " + f2(92 + Math.sin(a - 0.05) * 64) + " " : " L") + f2(x) + " " + f2(y); }
+    g += `<path d="${fan} Z" fill="url(#${u}g)" ${stk(3.5)}/>`;
+    for (let k = 1; k < 8; k++) { const a = Math.PI * (1.08 + k * 0.105); g += `<path d="M65 96 L${f2(65 + Math.cos(a) * 44)} ${f2(92 + Math.sin(a) * 55)}" stroke="#d8901a" stroke-width="3" stroke-linecap="round"/>`; }
+    g += `<path d="M50 102 L56 92 H74 L80 102 Z" fill="url(#${u}g)" ${stk(3)}/><path d="M44 58 Q52 44 64 40" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".7"/>`;
+  }
+  [[22, 30], [110, 22], [112, 92]].forEach(([x, y], i) => { g += `<path d="${star(x, y, 8 - i, 3, 4)}" fill="#fff6c8" filter="url(#${u}gl)"/>`; });
+  return job(`assets/img/${file}.png`, W, H, g, defs);
+}
+
 /* ======================= Underwater backdrop (close-up, splash, icon) ======================= */
 function waterDefs() {
   return lin("sea", [[0, "#7fdcf0"], [0.35, "#2f9fd0"], [1, "#0e4c86"]]) + lin("ray", [[0, "#ffffff", 0.45], [1, "#ffffff", 0]]) +
@@ -688,6 +767,7 @@ const GAME_ICONS = {
   ride: () => { const t = turtle({ v: "vert", uid: "irt" }), c = octo("left", 0, false, "irc", { seated: true });
     return { defs: t.defs + c.defs, body: `<g transform="translate(64 118) scale(0.98) translate(-66 -104)">${t.body}</g><g transform="translate(70 64) scale(0.66) translate(-64 -96)">${c.body}</g>` }; },
   chest: () => ({ defs: chestDefs("ich"), body: chest(64, 116, 1.0, "ich", true) }),
+  crab: () => { const r = crabThief(0, "icr"); return { defs: r.defs, body: `<g transform="translate(64 66) scale(0.88) translate(-64 -70)">${r.body}</g>` }; },
   map: () => { const defs = lin("imp", [[0, "#fff6dc"], [1, "#f0d9a0"]]);
     let b = `<path d="M14 26 L46 16 L82 28 L114 18 V102 L82 112 L46 100 L14 110 Z" fill="url(#imp)" ${ist(7)}/><path d="M46 16 V100 M82 28 V112" stroke="${INK}" stroke-width="4" opacity=".5"/>`;
     b += `<path d="M26 92 Q44 60 64 74 Q84 88 92 50" fill="none" stroke="#c2803a" stroke-width="5" stroke-dasharray="7 6" stroke-linecap="round"/>`;
@@ -786,6 +866,8 @@ function build(jobs) {
   jobs.push(ground(), plazaTile(), lagoonFloor(LAGOON.w, LAGOON.h), kelp(), coral("coral_pink", "#ff8fb8", 3), coral("coral_orange", "#ffa04a", 7),
     house("house_shell", "shell"), house("house_tower", "tower"), house("house_dome", "dome"), lamp(), vent(),
     starfish("starfish", "#ff9f43"), starfish("starfish_b", "#ff6fa5"), clam(), statue(), jarHouse(), mapBoard(), chestMarker());
+  jobs.push(crabThiefSheet(), homeTarget(), rareItem("item_crown", "crown"), rareItem("item_spyglass", "spyglass"), rareItem("item_bottle", "bottle"),
+    rareItem("item_anchor", "anchor"), rareItem("item_shell", "shell"));
   jobs.push(algae("algae", "#6cbf5a", 2), algae("algae_b", "#a8a050", 6), sponge(), wantBubble());
   jobs.push(icon("assets/favicon.png", 512), icon("assets/apple-touch-icon.png", 180), icon("assets/icon-192.png", 192), icon("assets/icon-maskable.png", 512, 0.8), logo(), splash());
   jobs.push(...gameIcons(), ...IK.jobs(PAL, ["star", "heart", "heartEmpty", "sound", "soundOff", "help", "avatar", "goals", "close", "play", "resume", "check", "calendar", "gift", "hand", "sparkle", "moon", "refresh", "arrow", "trophy", "palette", "battery", "smile", "meh", "sad", "joy", "home", "lock"]));

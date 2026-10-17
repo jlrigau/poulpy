@@ -193,9 +193,13 @@ like a game made by a studio — not a prototype. Concretely:
 - Poulpy = a little pink octopus, in a city under the sea. Loop: sea turtles
   (needs `energie` ← seaweed, `propre` ← close-up brushing of algae off the shell), ride a turtle,
   pseudo-3D **race** against sea animals (`race.rivals`: clownfish, pufferfish, ray, crab, whale),
-  **treasure hunts** (`missions`, one leg, chest marker), rest in Poulpy's jar (amphora) house, unlocks
-  (lamps, giant clam, champion statue), 2 objective levels. Pearls = coins (no shop yet).
+  **treasure hunts** (`missions`, two modes via per-offer overrides: SMALL = one leg to a hidden chest;
+  BIG = fetch the chest far away then bring it home to the shell ring in front of the house while the
+  **crab thief** chases you (`chase`, slower than Poulpy, `caughtKeepsMission`: it only pinches 5 pearls);
+  each big treasure unlocks one of 5 rare items in the "treasure corner" by the house, stat `bigTreasure`), rest in Poulpy's jar (amphora) house, unlocks
+  (lamps, giant clam, champion statue), 3 objective levels. Pearls = coins (no shop yet).
 - Owner choices (first interview): extra activity = **treasure hunt**; race mount = **sea turtle**.
+  Treasure modes (2nd interview): big = "le voleur de trésor", on foot or riding, reward = a rare item.
   The hero is an **octopus named Poulpy** (owner correction: a first version misheard it as a chick
   "Poulepi" — never draw a chick). Only one octopus in the game: the race has a crab, not an octopus.
 - Art: `tools/art/poulpy.cjs` — `octo()` (Poulpy, every view), `turtle()` (side), `turtleFront()`

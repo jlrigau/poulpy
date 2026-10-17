@@ -497,6 +497,12 @@ missions: { title, subtitle, stat:"missions", radius:80, color, marker:"<image k
   pickups:[{ x, y, name }], target:"<image key>", targetScale, cargoIcon, cargoLabel,
   pickedMessage("{d}"), hotPickedMessage("{d}") }   // takenMessage may use {p} (pickup name)
 ```
+**Per-offer overrides**: an offer may carry its own `pickups` (array, or `false` = one leg even when the
+mission-wide list exists), `dests`, `target` / `marker` (`false` = none), `targetScale` / `markerScale`,
+messages (`takenMessage`, `hotMessage`, `pickedMessage`, `hotPickedMessage`, `doneMessage`) and an extra
+`stat` counted on completion (on top of `missions.stat`) — e.g. a small treasure = one leg to a hidden
+chest, a big treasure = pick the chest up then bring it home with a pursuer (Poulpy). The chosen offer
+is saved as `state.mission.offer` (older saves: mission-wide settings).
 With `pickups`, a mission has **two legs**: go and pick the cargo up (the `marker`), then bring it
 to the destination, shown as a flat ground `target` decal; a HUD chip (`cargoIcon`) shows you carry
 it, and a hot offer's chase starts at pickup. Without `pickups`, one leg as below.
@@ -509,6 +515,8 @@ it; reaching it pays `pay`, counts `stat`, and saves. `heat` > 0 starts a chase.
 chase: { sprite, dirSheet?:{cols}, scale, originY, icon, label, maxLevel:3, maxUnits:3, speed,
   catchRadius, catchSeconds, loseRadius, loseAfter, fine, spawnDist, escapedMessage, caughtMessage("{f}") }
 ```
+`caughtKeepsMission: true` (gentler, kids): when caught, the pursuer only takes its `fine` and leaves —
+the mission goes on (default: the mission is lost).
 The HUD shows `maxLevel` icons (lit = current level). Up to `maxUnits` pursuers spawn
 `spawnDist` away and home in (sliding along collisions; a dirSheet sprite turns and blinks
 between its frames). Staying within `catchRadius` for `catchSeconds` = caught (fine, mission

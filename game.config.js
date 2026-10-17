@@ -27,7 +27,7 @@ window.GAME = {
     tagline: "Le petit poulpe de la cité sous la mer !",
     saveKey: "poulpy",
     audience: { minAge: 6, maxAge: 8, notes: "young kids 6–8: gentle, cute, no violence, almost no reading needed" },
-    assetVersion: "v4",
+    assetVersion: "v5",
     theme: { home: "#0e4c86", play: "#1670a8", closeup: "#0e4c86" },
     showCoins: true,
     coinIcon: "pearl",
@@ -67,7 +67,7 @@ window.GAME = {
     palette: "assets/ui/icons/palette.webp", battery: "assets/ui/icons/battery.webp", smile: "assets/ui/icons/smile.webp",
     meh: "assets/ui/icons/meh.webp", sad: "assets/ui/icons/sad.webp", joy: "assets/ui/icons/joy.webp", home: "assets/ui/icons/home.webp", lock: "assets/ui/icons/lock.webp",
     octo: "assets/ui/icons/octo.webp", turtle: "assets/ui/icons/turtle.webp", pearl: "assets/ui/icons/pearl.webp", seaweed: "assets/ui/icons/seaweed.webp",
-    brush: "assets/ui/icons/brush.webp", ride: "assets/ui/icons/ride.webp", chest: "assets/ui/icons/chest.webp", map: "assets/ui/icons/map.webp",
+    brush: "assets/ui/icons/brush.webp", crab: "assets/ui/icons/crab.webp", ride: "assets/ui/icons/ride.webp", chest: "assets/ui/icons/chest.webp", map: "assets/ui/icons/map.webp",
     flag: "assets/ui/icons/flag.webp", timer: "assets/ui/icons/timer.webp", distance: "assets/ui/icons/distance.webp", speed: "assets/ui/icons/speed.webp",
     quit: "assets/ui/icons/quit.webp", left: "assets/ui/icons/left.webp", right: "assets/ui/icons/right.webp",
   },
@@ -113,6 +113,9 @@ window.GAME = {
       starfish: { path: "assets/img/starfish.webp", res: 2 }, starfish_b: { path: "assets/img/starfish_b.webp", res: 2 },
       clam: { path: "assets/img/clam.webp", res: 2 }, statue: { path: "assets/img/statue.webp", res: 2 },
       jar_house: { path: "assets/img/jar_house.webp", res: 2 }, map_board: { path: "assets/img/map_board.webp", res: 2 }, chest: { path: "assets/img/chest.webp", res: 2 },
+      home_target: { path: "assets/img/home_target.webp", res: 2 },
+      item_crown: { path: "assets/img/item_crown.webp", res: 2 }, item_spyglass: { path: "assets/img/item_spyglass.webp", res: 2 }, item_bottle: { path: "assets/img/item_bottle.webp", res: 2 },
+      item_anchor: { path: "assets/img/item_anchor.webp", res: 2 }, item_shell: { path: "assets/img/item_shell.webp", res: 2 },
       // close-up: algae to brush off, the sponge, the "brush me" bubble
       algae: "assets/img/algae.webp", algae_b: "assets/img/algae_b.webp", brush: "assets/img/brush.webp",
       want_algae: { path: "assets/img/want_algae.webp", res: 2 },
@@ -132,6 +135,7 @@ window.GAME = {
       turtle_vert: { path: "assets/sheet/turtle_vert.webp", frameWidth: 128, frameHeight: 128, res: 2 },
       turtle_bleu: { path: "assets/sheet/turtle_bleu.webp", frameWidth: 128, frameHeight: 128, res: 2 },
       turtle_rose: { path: "assets/sheet/turtle_rose.webp", frameWidth: 128, frameHeight: 128, res: 2 },
+      crab_thief: { path: "assets/sheet/crab_thief.webp", frameWidth: 128, frameHeight: 128, res: 2 },
     },
   },
 
@@ -264,13 +268,28 @@ window.GAME = {
       box: { dx: -80, dy: -40, w: 160, h: 42 }, action: "missions", actionLabel: "Chercher un trésor", icon: "map", color: "#ffc93c", hint: "Suis la flèche jusqu’au trésor caché" },
   ],
 
-  /* ---- Treasure hunts: a chest is hidden somewhere in the city; follow the arrow to find it ---- */
+  /* ---- Treasure hunts: two different ways to play ----
+     Small treasure: follow the arrow to a chest hidden in the city, open it there.
+     Big treasure: fetch the big chest far away, then bring it back HOME (the shell ring in front of
+     Poulpy's house) while the crab thief chases you; each big treasure also holds a rare item
+     (unlocks below) that joins the treasure corner by the house. */
   missions: {
     title: "{i:map} Chasse au trésor", subtitle: "Quel trésor veux-tu chercher ?",
     stat: "treasure", radius: 80, color: "#ffc93c", marker: "chest", markerScale: 0.7,
+    cargoIcon: "chest", cargoLabel: "Trésor",
     offers: [
-      { label: "Petit trésor", sub: "Un coffre caché dans la cité : {i:pearl} 10", icon: "chest", pay: 10 },
-      { label: "Grand trésor", sub: "Un coffre plein de perles : {i:pearl} 15", icon: "map", pay: 15 },
+      { label: "Petit trésor", sub: "Suis la flèche jusqu’au coffre caché : {i:pearl} 10", icon: "chest", pay: 10 },
+      { label: "Grand trésor", sub: "Rapporte le coffre à la maison sans te faire attraper par le crabe voleur ! {i:pearl} 25 + un objet rare", icon: "crab", pay: 25, heat: 1,
+        stat: "bigTreasure", markerScale: 0.95,
+        pickups: [
+          { x: 200, y: 1500, name: "la forêt d’algues" }, { x: 2200, y: 300, name: "le grand corail" }, { x: 2250, y: 1550, name: "les rochers" },
+          { x: 1250, y: 1650, name: "le bout de la rue du Corail" }, { x: 2200, y: 900, name: "le bout de la rue des Coquillages" }, { x: 1600, y: 300, name: "la maison-bulle" },
+        ],
+        dests: [{ x: 520, y: 1100, name: "la maison de Poulpy" }],
+        target: "home_target", targetScale: 0.75,
+        takenMessage: "{i:map} Le grand trésor est caché vers {p}. Suis la flèche !",
+        hotPickedMessage: "{i:crab} Tu l’as ! Vite, rapporte-le à la maison… le crabe voleur arrive !",
+        doneMessage: "{i:chest} Grand trésor rapporté à la maison ! +{p}" },
     ],
     dests: [
       { x: 200, y: 1500, name: "la forêt d’algues" }, { x: 2200, y: 300, name: "le grand corail" }, { x: 2250, y: 1550, name: "les rochers" },
@@ -280,6 +299,17 @@ window.GAME = {
     takenMessage: "{i:map} Un trésor est caché vers {d}. Suis la flèche !",
     doneMessage: "{i:chest} Trésor trouvé ! +{p}",
     busyMessage: "{i:map} Trouve d’abord ton trésor !",
+    chaseEndMessage: "{i:crab} Trop tard pour le crabe : le trésor est à l’abri !",
+  },
+
+  /* ---- The crab thief (big treasure): slower than Poulpy, so a child can always outrun it.
+     If it catches you it only pinches a few pearls and runs off — the treasure stays yours. ---- */
+  chase: {
+    sprite: "crab_thief", dirSheet: { cols: 2 }, blinkRate: 8, scale: 0.84, originY: 0.85, icon: "crab", label: "Crabe voleur",
+    maxLevel: 1, maxUnits: 1, speed: 150, catchRadius: 56, catchSeconds: 2.5, loseRadius: 950, loseAfter: 8, fine: 5, spawnDist: 520,
+    caughtKeepsMission: true,
+    escapedMessage: "{i:crab} Le crabe voleur a abandonné !",
+    caughtMessage: "{i:crab} Le crabe voleur t’a pincé {f} perles et s’enfuit ! Le trésor est toujours à toi.",
   },
 
   /* ---- The city: houses, kelp, corals, rocks (with collision footprints on the solid ones) ---- */
@@ -316,7 +346,7 @@ window.GAME = {
     { x: 120, y: 700, sprite: "coral_pink", scale: 0.75, box: { dx: -38, dy: -14, w: 76, h: 18 } },
     { x: 620, y: 1350, sprite: "rock_b", scale: 0.7, box: { dx: -46, dy: -18, w: 92, h: 22 } },
     { x: 1000, y: 250, sprite: "coral_orange", scale: 0.7, box: { dx: -36, dy: -14, w: 72, h: 18 } },
-    { x: 750, y: 1160, sprite: "kelp", scale: 0.7, anim: "sway", box: false },
+    { x: 860, y: 1180, sprite: "kelp", scale: 0.7, anim: "sway", box: false },
   ],
 
   /* ---- Unlocks: the city gets prettier as Poulpy plays (no reading needed) ---- */
@@ -327,11 +357,22 @@ window.GAME = {
       scenery: { x: 1130, y: 1060, sprite: "clam", scale: 0.7, glow: "#ffd6ef", glowY: 50, box: { dx: -56, dy: -22, w: 112, h: 26 } } },
     { id: "statue", when: (s) => (s.stats.racePodium || 0) >= 1 || (s.stats.raceWin || 0) >= 1, message: "{i:trophy} Une statue de champion pour ta tortue !",
       scenery: { x: 1400, y: 1060, sprite: "statue", scale: 0.6, glow: "#ffe680", glowY: 80, box: { dx: -46, dy: -18, w: 92, h: 22 } } },
+    // the treasure corner by Poulpy's house: one rare item per big treasure brought home
+    { id: "crown", when: { stat: "bigTreasure", atLeast: 1 }, message: "{i:gift} Dans le grand coffre : une couronne ! Elle rejoint le coin des trésors.",
+      scenery: { x: 300, y: 1190, sprite: "item_crown", scale: 0.6, box: { dx: -24, dy: -12, w: 48, h: 14 } } },
+    { id: "spyglass", when: { stat: "bigTreasure", atLeast: 2 }, message: "{i:gift} Dans le grand coffre : une longue-vue !",
+      scenery: { x: 390, y: 1210, sprite: "item_spyglass", scale: 0.6, box: { dx: -24, dy: -12, w: 48, h: 14 } } },
+    { id: "bottle", when: { stat: "bigTreasure", atLeast: 3 }, message: "{i:gift} Dans le grand coffre : une bouteille à message !",
+      scenery: { x: 650, y: 1210, sprite: "item_bottle", scale: 0.6, box: { dx: -24, dy: -12, w: 48, h: 14 } } },
+    { id: "anchor", when: { stat: "bigTreasure", atLeast: 4 }, message: "{i:gift} Dans le grand coffre : une ancre en or !",
+      scenery: { x: 740, y: 1190, sprite: "item_anchor", scale: 0.6, box: { dx: -24, dy: -12, w: 48, h: 14 } } },
+    { id: "goldshell", when: { stat: "bigTreasure", atLeast: 5 }, message: "{i:trophy} Dans le grand coffre : le coquillage d’or ! Ta collection est complète !",
+      scenery: { x: 520, y: 1260, sprite: "item_shell", scale: 0.65, box: { dx: -26, dy: -12, w: 52, h: 14 } } },
   ],
 
-  /* ---- Objectives: two small levels ---- */
+  /* ---- Objectives: three small levels ---- */
   objectives: {
-    extraStats: ["ride"],
+    extraStats: ["ride", "bigTreasure"],
     levels: [
       { name: "Petit explorateur", goals: [
         { id: "feed1", name: "Miam !", desc: "Donne des algues à une tortue {i:seaweed}", check: (s) => (s.stats.feed || 0) >= 1 },
@@ -343,6 +384,10 @@ window.GAME = {
         { id: "race1", name: "Sur le podium", desc: "Finis une course dans les 3 premiers {i:flag}", check: (s) => (s.stats.racePodium || 0) >= 1 || (s.stats.raceWin || 0) >= 1 },
         { id: "treasure3", name: "Chasseur de trésors", desc: "Trouve 3 trésors {i:chest}", check: (s) => (s.stats.treasure || 0) >= 3 },
         { id: "win1", name: "Champion !", desc: "Gagne une course {i:trophy}", check: (s) => (s.stats.raceWin || 0) >= 1 },
+        { id: "big1", name: "Plus malin que le crabe", desc: "Rapporte un grand trésor à la maison {i:crab}", check: (s) => (s.stats.bigTreasure || 0) >= 1 },
+      ] },
+      { name: "Grand collectionneur", goals: [
+        { id: "big5", name: "Le coin des trésors", desc: "Rapporte 5 grands trésors : couronne, longue-vue, bouteille, ancre et coquillage d’or {i:chest}", check: (s) => (s.stats.bigTreasure || 0) >= 5 },
       ] },
     ],
   },
@@ -354,7 +399,7 @@ window.GAME = {
     "{i:turtle} <b>Tes tortues :</b> {i:seaweed} donne-leur des algues pour l’énergie, et {i:brush} brosse leur carapace : frotte les algues avec ton doigt !",
     "{i:ride} <b>Monter :</b> monte sur une tortue pour nager plus vite dans la cité.",
     "{i:flag} <b>La course :</b> sur ta tortue, touche Course. Touche à gauche ou à droite pour dépasser le poisson-clown, le poisson-globe, la raie, le crabe et la baleine. Évite les méduses !",
-    "{i:map} <b>Chasse au trésor :</b> va au panneau du trésor sur la place. Suis la flèche jusqu’au coffre caché et gagne des {i:pearl} perles.",
+    "{i:map} <b>Chasse au trésor :</b> va au panneau du trésor sur la place. <b>Petit trésor</b> : suis la flèche jusqu’au coffre caché. <b>Grand trésor</b> : va chercher le gros coffre, puis rapporte-le devant la maison de Poulpy sans te faire attraper par le {i:crab} crabe voleur. Chaque grand trésor contient un objet rare pour ta collection !",
     "{i:gift} <b>Surprises :</b> plus tu joues, plus la cité devient jolie.",
     "{i:moon} <b>Dormir :</b> dans la maison de Poulpy, pour passer au jour suivant. Le jeu se sauvegarde tout seul.",
   ],
