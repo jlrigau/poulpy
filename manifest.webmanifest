@@ -1,13 +1,13 @@
 {
-  "name": "Nebula Nursery",
-  "short_name": "Nebula",
-  "lang": "en",
+  "name": "Poulepi",
+  "short_name": "Poulepi",
+  "lang": "fr",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0b1029",
-  "theme_color": "#120c34",
+  "background_color": "#1670a8",
+  "theme_color": "#0e4c86",
   "icons": [
     {
       "src": "assets/icon-192.png",

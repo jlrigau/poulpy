@@ -1,20 +1,20 @@
-# Ludea — Game Engine
+# Poulepi
 
-A **template repository** for building small top-down 2D games (Phaser 3, 100% static,
-no build). The engine is generic: you don't code a game, you **describe** it in one
-config file (`game.config.js`) + assets — or just run the **`/new-game`** skill and
-answer a few questions.
+**The little chick of the city under the sea!** Poulepi is a little chick in a glass bubble
+helmet who lives in an underwater city. He looks after his sea turtles (seaweed for energy, and
+a close-up where you rub the algae off their shell with your finger), rides them around the
+city, races them against a clownfish, a pufferfish, a manta ray, an octopus and a whale, and
+follows the arrow on treasure hunts to find chests full of pearls. The city gets prettier as
+you play (lamps, a giant clam, a champion's statue).
 
-It ships with a small **starter game** that already runs — a mini space nursery where a
-keeper robot looks after three glowing critters (three needs, a close-up "polish" scene, a
-rest pod, surprises that appear as you play), in English and French. It is the seed that
-`/new-game` turns into your game (`.claude/skills/new-game/references/minimal-seed.config.js`).
+For **young kids (6–8)**: almost no reading needed, one-tap actions, a guide arrow, sound.
+The game is in French, with an English version (flag toggle on the home screen).
 
-Want to see everything the engine can do? The showcase **Nebula Nursery** switches on every
-system — riding and jumps, shop and decorations, deliveries chased by drones, a pseudo-3D race…
+▶ **[Play Poulepi](https://ludea.ai/poulpy/)**
 
-▶ **[Play the showcase](https://ludea.ai/nebula/)** ([source](https://github.com/ludea-ai/nebula)) ·
-**[ludea.ai — the games made with the engine](https://ludea.ai/)**
+Poulepi is built on the reusable **Ludea game engine** (the [game-engine](https://github.com/ludea-ai/game-engine)
+template): the whole game is described in `game.config.js` + generated art (`tools/art/poulepi.cjs`).
+The rest of this README explains how the engine works and how to make your own game with it.
 
 ---
 

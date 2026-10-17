@@ -63,7 +63,7 @@ to every repo · `ludea-ai.github.io` = the brand site + games catalogue · the 
   errors. The harness points Chromium at `HTTPS_PROXY` when set; Phaser is vendored so
   tests don't need a CDN. **Always validate visually before pushing.**
 - Several games served at once: target one with `--port N` (nebula 8099, dr-smile 8100, gta7 8101,
-  my-little-stable 8102, game-engine starter 8103, ludea.ai site 8104). The harness refuses unknown options — an ignored `--url` once made every
+  my-little-stable 8102, game-engine starter 8103, ludea.ai site 8104, poulpy 8105). The harness refuses unknown options — an ignored `--url` once made every
   "other game" regression silently test Nebula.
 
 ## 6. Engine capabilities (all config-gated — see ENGINE.md)
@@ -183,18 +183,19 @@ like a game made by a studio — not a prototype. Concretely:
   big; tiny footer flags = no; flags merged into a split pill = "pas fan" → KEEP this knob toggle. Any new/changed text ships translated (`--check`).
 - New owner feedback → add it to this section (via **capitalize-learnings**).
 
-## 10. This repo — the template (game-engine)
-- What "Use this template" gives: the engine layer + a SMALL playable starter game — a mini Nebula
-  Nursery (one pen, 3 needs, 4 actions incl. the close-up, one rest station, unlocks, one level),
-  English + French. It publishes nothing: on the template, `deploy.yml` deploys only a redirect to
-  https://ludea.ai/ (a game created from the template is not a template repo, so it publishes the game).
-- `game.config.js` == `.claude/skills/new-game/references/minimal-seed.config.js` — keep them
-  IDENTICAL (edit both). Translations in `game.i18n.js`.
-- Art: `tools/art/starter.cjs` = the subset of Nebula's `tools/art/nebula.cjs` the starter uses
-  (renders byte-identical files); 76 files in `assets/`. If Nebula redraws one of them, port it here.
-- Engine work is NOT done here: it is developed in `nebula`, then copied here with **sync-engine**
-  (engine.js, engine.css, ENGINE.md, .claude/skills). After a sync: tour on the starter (port 8103).
-- README = the template's user guide ("Create a new game" from github.com/ludea-ai/game-engine).
+## 10. This repo — Poulepi (`ludea-ai/poulpy`)
+- A game created from the template (live at https://ludea.ai/poulpy/; `deploy.yml` publishes the game).
+  Kids 6–8, French source (`meta.lang:"fr"`) + English in `game.i18n.js`.
+- Poulepi = a little chick in a glass bubble helmet, in a city under the sea. Loop: sea turtles
+  (needs `energie` ← seaweed, `propre` ← close-up brushing of algae off the shell), ride a turtle,
+  pseudo-3D **race** against sea animals (`race.rivals`: clownfish, pufferfish, ray, octopus, whale),
+  **treasure hunts** (`missions`, one leg, chest marker), rest in Poulepi's egg house, unlocks
+  (lamps, giant clam, champion statue), 2 objective levels. Pearls = coins (no shop yet).
+- Owner choices (first interview): extra activity = **treasure hunt**; race mount = **sea turtle**.
+- Art: `tools/art/poulepi.cjs` — `chick()` (Poulepi, every view), `turtle()` (side), `turtleFront()`
+  (close-up, thumbs), `turtleBack()` + `chickBack()` (race layers). Close-up spot areas in the config
+  (`brush.closeup.spots.area`) match `CU` in the art module.
+- Engine work is NOT done here: it is developed in `nebula` and copied here with **sync-engine**.
 
 ## 11. Ludea organisation (restructured Oct 2026)
 Layout in https://github.com/ludea-ai (every repo is served at `https://ludea.ai/<repo>/` — see the domain state below):
@@ -207,7 +208,7 @@ Layout in https://github.com/ludea-ai (every repo is served at `https://ludea.ai
 - **`ludea-ai.github.io`** — the brand site (https://ludea.ai/): landing EN at `/`, FR at `/fr/`, design
   system at `/design/`, games catalogue, all Ludea brand art (`tools/art/brand.cjs`). When a game
   is added or gains a mode, update its catalogue card there.
-- Games: `dr-smile`, `gta7`, `my-little-stable`.
+- Games: `dr-smile`, `gta7`, `my-little-stable`, `poulpy` (Poulepi).
 - The engine layer (engine.js, engine.css, ENGINE.md, vendor/, .claude/skills) is identical in every
   repo. Old `jlrigau.github.io/…` addresses are gone (repos transferred); saves were not migrated
   (owner: fine). Later (not now): load the engine from one place instead of copying it.
