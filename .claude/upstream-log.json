@@ -1,0 +1,50 @@
+[
+ {
+  "at": "2026-10-18T09:21:58.254Z",
+  "kind": "contribution",
+  "key": "engine.js+ENGINE.md missions per-offer overrides",
+  "issue": "https://github.com/ludea-ai/game-engine/issues/1"
+ },
+ {
+  "at": "2026-10-18T09:21:58.299Z",
+  "kind": "contribution",
+  "key": "engine.js+ENGINE.md chase.caughtKeepsMission",
+  "issue": "https://github.com/ludea-ai/game-engine/issues/2"
+ },
+ {
+  "at": "2026-10-18T09:21:58.337Z",
+  "kind": "contribution",
+  "key": "engine.js updateGuide edge pointer clamp + probes/tour.cjs",
+  "issue": "https://github.com/ludea-ai/game-engine/issues/3"
+ },
+ {
+  "at": "2026-10-18T09:21:58.375Z",
+  "kind": "contribution",
+  "key": "probes/racerivals.cjs overtake margin",
+  "issue": "https://github.com/ludea-ai/game-engine/issues/4"
+ },
+ {
+  "at": "2026-10-18T09:21:58.424Z",
+  "kind": "contribution",
+  "key": "new-game/SKILL.md confirm the hero",
+  "issue": "https://github.com/ludea-ai/game-engine/issues/5"
+ },
+ {
+  "at": "2026-10-18T09:21:58.471Z",
+  "kind": "bug",
+  "key": "deploy.yml first deploy fails at Configure Pages",
+  "issue": "https://github.com/ludea-ai/game-engine/issues/6"
+ },
+ {
+  "at": "2026-10-18T09:21:58.518Z",
+  "kind": "bug",
+  "key": "new-game never edit engine.js contradiction + skipped steps",
+  "issue": "https://github.com/ludea-ai/game-engine/issues/7"
+ },
+ {
+  "at": "2026-10-18T09:21:58.564Z",
+  "kind": "bug",
+  "key": "verification tooling (webkit, ss, playtest --help, chase webkit)",
+  "issue": "https://github.com/ludea-ai/game-engine/issues/8"
+ }
+]
