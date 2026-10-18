@@ -59,5 +59,11 @@
    ".claude/skills/_shared/probes/tour.cjs": "3e13b911aac69958b735a07690a9e7783fc7305d",
    ".claude/skills/new-game/SKILL.md": "28e762cec0836a1a5ac19dd286269bca1190f41e"
   }
+ },
+ {
+  "at": "2026-10-18T13:06:32.335Z",
+  "kind": "publish",
+  "key": "fa2b34b",
+  "issue": "https://github.com/ludea-ai/ludea-ai.github.io/issues/1"
  }
 ]
