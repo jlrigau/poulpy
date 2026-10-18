@@ -46,5 +46,18 @@
   "kind": "bug",
   "key": "verification tooling (webkit, ss, playtest --help, chase webkit)",
   "issue": "https://github.com/ludea-ai/game-engine/issues/8"
+ },
+ {
+  "at": "2026-10-18T09:22:59.802Z",
+  "kind": "contribution",
+  "key": "files of issues #1-#5",
+  "issue": "https://github.com/ludea-ai/game-engine/issues/1",
+  "files": {
+   "engine.js": "a7d30de010189992067c55efbf2d6422096c19d5",
+   "ENGINE.md": "675fb99c5d013e24082aebffcb72626c47671fda",
+   ".claude/skills/_shared/probes/racerivals.cjs": "6cd325e7f902a5e1a978d098a1e5bfd43d2b9517",
+   ".claude/skills/_shared/probes/tour.cjs": "3e13b911aac69958b735a07690a9e7783fc7305d",
+   ".claude/skills/new-game/SKILL.md": "28e762cec0836a1a5ac19dd286269bca1190f41e"
+  }
  }
 ]
