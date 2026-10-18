@@ -65,5 +65,29 @@
   "kind": "publish",
   "key": "fa2b34b",
   "issue": "https://github.com/ludea-ai/ludea-ai.github.io/issues/1"
+ },
+ {
+  "at": "2026-10-18T13:14:24.753Z",
+  "kind": "bug",
+  "key": "meta.author extracted by i18n + undocumented",
+  "issue": "https://github.com/ludea-ai/game-engine/issues/9"
+ },
+ {
+  "at": "2026-10-18T13:14:24.824Z",
+  "kind": "bug",
+  "key": "drift false unreported (alreadyUpstream / behind)",
+  "issue": "https://github.com/ludea-ai/game-engine/issues/10"
+ },
+ {
+  "at": "2026-10-18T13:14:24.871Z",
+  "kind": "idea",
+  "key": "game session cannot reach Ludea repos",
+  "issue": "https://github.com/ludea-ai/game-engine/issues/11"
+ },
+ {
+  "at": "2026-10-18T13:14:24.924Z",
+  "kind": "idea",
+  "key": "ludea-publish clarifications",
+  "issue": "https://github.com/ludea-ai/game-engine/issues/12"
  }
 ]

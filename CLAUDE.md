@@ -194,8 +194,8 @@ like a game made by a studio — not a prototype. Concretely:
   the hero (species + name spelling) in the first interview question.
 - New owner feedback → add it to this section (via **capitalize-learnings**).
 
-## 10. This repo — Poulpy (`ludea-ai/poulpy`)
-- A game created from the template (live at https://ludea.ai/poulpy/; `deploy.yml` publishes the game).
+## 10. This repo — Poulpy (`jlrigau/poulpy`)
+- A game created from the template (live at https://jlrigau.github.io/poulpy/ — ludea.ai/poulpy/ only once the catalogue review accepts it (request ludea-ai/ludea-ai.github.io#1); `deploy.yml` publishes the game).
   Kids 6–8, French source (`meta.lang:"fr"`) + English in `game.i18n.js`.
 - Poulpy = a little pink octopus, in a city under the sea. Loop: sea turtles
   (needs `energie` ← seaweed, `propre` ← close-up brushing of algae off the shell), ride a turtle,
