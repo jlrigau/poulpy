@@ -4,6 +4,7 @@
 window.GAME_I18N = window.GAME_I18N || {};
 window.GAME_I18N.en = {
   "Poulpy": "Poulpy",
+  "Jean-Louis Rigau": "Jean-Louis Rigau",
   "Le petit poulpe de la cité sous la mer !": "The little octopus of the city under the sea!",
   "Le nom de ta cité :": "Name your city:",
   "Bulle-Ville": "Bubbletown",
