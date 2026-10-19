@@ -107,5 +107,11 @@
   "kind": "bug",
   "key": "WebKit missing in cloud container (again)",
   "issue": "https://github.com/ludea-ai/game-engine/issues/8#issuecomment-6266849132"
+ },
+ {
+  "at": "2026-10-19T12:11:17.706Z",
+  "kind": "bug",
+  "key": "report-upstream not triggered during update/release; link instead of direct send",
+  "issue": "https://github.com/ludea-ai/game-engine/issues/18"
  }
 ]
