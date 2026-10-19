@@ -89,5 +89,23 @@
   "kind": "idea",
   "key": "ludea-publish clarifications",
   "issue": "https://github.com/ludea-ai/game-engine/issues/12"
+ },
+ {
+  "at": "2026-10-19T12:09:02.369Z",
+  "kind": "bug",
+  "key": "share-preview logo trim cuts soft glow",
+  "issue": "https://github.com/ludea-ai/game-engine/issues/17"
+ },
+ {
+  "at": "2026-10-19T12:09:02.428Z",
+  "kind": "bug",
+  "key": "sync-engine keeps stale skills missing from an old manifest",
+  "issue": "https://github.com/ludea-ai/game-engine/issues/13#issuecomment-6266847634"
+ },
+ {
+  "at": "2026-10-19T12:09:02.498Z",
+  "kind": "bug",
+  "key": "WebKit missing in cloud container (again)",
+  "issue": "https://github.com/ludea-ai/game-engine/issues/8#issuecomment-6266849132"
  }
 ]
