@@ -193,6 +193,9 @@ like a game made by a studio — not a prototype. Concretely:
   poulpe" arrived as "petit poulet" → a chick was drawn, then thrown away). Before drawing the hero,
   cross-check the request with the repo name / title and, when a word could be heard two ways, confirm
   the hero (species + name spelling) in the first interview question.
+- **Engine problems found along the way are reported directly** (owner, 2026-10-19): run **report-upstream**
+  yourself (`add_repo` ludea-ai/game-engine, then create the issue / comment) — never stop at a
+  prefilled link for the owner to click. The owner has already said yes, don't ask.
 - New owner feedback → add it to this section (via **capitalize-learnings**).
 
 ## 10. This repo — Poulpy (`jlrigau/poulpy`)
