@@ -113,5 +113,11 @@
   "kind": "bug",
   "key": "report-upstream not triggered during update/release; link instead of direct send",
   "issue": "https://github.com/ludea-ai/game-engine/issues/18"
+ },
+ {
+  "at": "2026-10-19T12:22:32.563Z",
+  "kind": "idea",
+  "key": "option to not ask the player name (named hero)",
+  "issue": "https://github.com/ludea-ai/game-engine/issues/20"
  }
 ]
