@@ -28,7 +28,7 @@ window.GAME = {
     saveKey: "poulpy",
     audience: { minAge: 6, maxAge: 8, notes: "young kids 6–8: gentle, cute, no violence, almost no reading needed" },
     author: { name: "Jean-Louis Rigau", github: "jlrigau" },
-    assetVersion: "v6",
+    assetVersion: "v7",
     theme: { home: "#0e4c86", play: "#1670a8", closeup: "#0e4c86" },
     showCoins: true,
     coinIcon: "pearl",

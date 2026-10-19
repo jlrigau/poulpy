@@ -76,8 +76,19 @@ can override only what you want). Texts are in `meta.lang`; translations: see **
 ```
 lang: "en" | "fr" | …,                // source language of every text in this config
 title, titleIcon, logo ("assets/img/logo.png" — big home-screen image), shortName, tagline, saveKey, assetVersion: "vN",
+description,                          // optional: 1–2 sentences for the Ludea catalogue card (source language; translated in game.i18n.js like any text); not shown in-game
 legacySave: { key: "old-key" | ["k1","k2"], migrate: (old) => stateLike },   // see below
 audience: { minAge, notes },          // used by the asset skills' content policy
+author: { name, github, url, contributors: [{ login, name }], coAuthors: [{ name }] },
+                                      // who made and publishes the game: the catalogue credit AND the in-game legal notice
+                                      // (name = a name or pseudonym; github = login, shown as the contact). coAuthors = e.g. the
+                                      // child who made the game with their parent: a FIRST NAME OR NICKNAME only (never a surname,
+                                      // an age, a school or a town) and only with the parent's agreement (/publish asks)
+creditLine,                           // optional, translatable: how the makers are credited, e.g. "Léa et son papa" (default:
+                                      // author.name + coAuthors names)
+legalLinks: [{ label, url }],         // ONLY for a game served by a publisher that has its own legal pages (Ludea's catalogue
+                                      // copies: legal notice, privacy, contact) — https or same-site URLs. Without it the engine
+                                      // shows its generated notice (below).
 theme: { home, play, closeup },        // iOS theme-color per screen
 showCoins,                             // false → hide the coins HUD (no economy)
 showDay, showCreatureCount,            // false → hide the day / creature-count HUD chips (minimal HUD)
@@ -88,6 +99,21 @@ ageUnit, and, nightMessage, restBlockedHint, neglectMessage, morningMessage,
 notEnough, idleHint, placeHint, placeHere, cancel, boughtDecorMessage, placedMessage, blocksPath,
 refundMessage, noOnBuilding, noInHome, nameLabel, confirm, nameTaken, closeLabel
 ```
+
+**Made with Ludea + legal notice (every game, automatic).** A small line at the bottom of the home
+screen, repeated at the bottom of the help: « Made with Ludea » (a link to https://ludea.ai/, opened
+in a new tab so the game is never lost — never shown during play) and the legal notice.
+- With `meta.legalLinks` (a publisher's own pages, e.g. Ludea's catalogue copies): those links.
+- Without (a creator's game on their own site — the normal case): « Legal notice » opens a notice
+  generated from `meta.author`: publisher = the author's name or pseudonym, « personal
+  non-professional website » (French law lets a private individual stay anonymous towards the public
+  when the host is named and knows them), contact = their GitHub profile; « created by » =
+  `creditLine` / co-authors; host = GitHub Pages; privacy = the engine collects nothing (no account,
+  cookie, ads or audience measurement; saves stay on the device; GitHub logs IPs like any host);
+  « Ludea is not the publisher of this game and has not reviewed it ». A game that collects anything
+  (it should not, especially for children) must write its own pages and list them in `legalLinks`.
+- The engine's own texts are translated by `_shared/engine-i18n.json`, filled into `game.i18n.js` by
+  `i18n-extract.cjs` automatically.
 Strings with `{name}`, `{day}`, `{names}`, `{item}` are interpolated by the engine, and
 `{i:key}` tokens become icons (see Icons). User-typed names are HTML-escaped.
 
@@ -491,7 +517,7 @@ which also counts the `earned` stat when it is listed in `objectives.extraStats`
 ### `missions` (go to a destination)
 ```
 missions: { title, subtitle, stat:"missions", radius:80, color, marker:"<image key>", markerScale,
-  offers:[{ label, sub, icon, pay, heat? }], dests:[{ x, y, name }],
+  offers:[{ id, label, sub, icon, pay, heat?, …per-offer overrides }], dests:[{ x, y, name }],
   takenMessage("{d}"), hotMessage("{d}"), doneMessage("{p}"), busyMessage,
   clearsChase:true, chaseEndMessage,   // completing a mission ends the chase (pursuers drive off + fade)
   pickups:[{ x, y, name }], target:"<image key>", targetScale, cargoIcon, cargoLabel,
@@ -499,10 +525,14 @@ missions: { title, subtitle, stat:"missions", radius:80, color, marker:"<image k
 ```
 **Per-offer overrides**: an offer may carry its own `pickups` (array, or `false` = one leg even when the
 mission-wide list exists), `dests`, `target` / `marker` (`false` = none), `targetScale` / `markerScale`,
-messages (`takenMessage`, `hotMessage`, `pickedMessage`, `hotPickedMessage`, `doneMessage`) and an extra
-`stat` counted on completion (on top of `missions.stat`) — e.g. a small treasure = one leg to a hidden
-chest, a big treasure = pick the chest up then bring it home with a pursuer (Poulpy). The chosen offer
-is saved as `state.mission.offer` (older saves: mission-wide settings).
+messages (`takenMessage`, `hotMessage`, `pickedMessage`, `hotPickedMessage`, `doneMessage`), an extra
+`stat` counted on completion (on top of `missions.stat`; usable by objectives / unlocks) and the chase's
+`caughtKeepsMission` / `caughtMessage` for its own errands — e.g. a small treasure = one leg to a hidden
+chest, a big treasure = pick the chest up then bring it home with a pursuer (a treasure-hunt game); in Nebula a one-leg
+star post (`pickups:false`) and a rare egg with its own stat (an unlock) that the drones can still snatch.
+Give each offer an `id`: the chosen offer is saved as `state.mission.offer` = its id (its index when it has
+none), so reordering `offers` never gives a saved mission another offer's settings. Older saves without it
+use the mission-wide settings.
 With `pickups`, a mission has **two legs**: go and pick the cargo up (the `marker`), then bring it
 to the destination, shown as a flat ground `target` decal; a HUD chip (`cargoIcon`) shows you carry
 it, and a hot offer's chase starts at pickup. Without `pickups`, one leg as below.
@@ -516,11 +546,12 @@ chase: { sprite, dirSheet?:{cols}, scale, originY, icon, label, maxLevel:3, maxU
   catchRadius, catchSeconds, loseRadius, loseAfter, fine, spawnDist, escapedMessage, caughtMessage("{f}") }
 ```
 `caughtKeepsMission: true` (gentler, kids): when caught, the pursuer only takes its `fine` and leaves —
-the mission goes on (default: the mission is lost).
+the mission goes on (default: the mission is lost). A mission offer may override `caughtKeepsMission`
+and `caughtMessage` for its own errands (see missions).
 The HUD shows `maxLevel` icons (lit = current level). Up to `maxUnits` pursuers spawn
 `spawnDist` away and home in (sliding along collisions; a dirSheet sprite turns and blinks
-between its frames). Staying within `catchRadius` for `catchSeconds` = caught (fine, mission
-lost); staying beyond `loseRadius` for `loseAfter` s lowers the level by one. A restyle with
+between its frames). Staying within `catchRadius` for `catchSeconds` = caught (the `fine`, and the
+mission is lost unless `caughtKeepsMission`; the pursuers leave either way); staying beyond `loseRadius` for `loseAfter` s lowers the level by one. A restyle with
 `clearsChase` (or `api.clearHeat()`) ends it.
 
 ### `models` (buy creatures with stats)

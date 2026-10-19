@@ -96,10 +96,11 @@ fold the learnings back into the engine/skills/docs and audit the separation).
 into the template and every game).
 **Ludea loop** (games ↔ engine): **report-upstream** (automatic, after capitalize-learnings: a
 game's engine bugs + engine changes it already made → issues on `ludea-ai/game-engine`),
-**ludea-feedback** (`/ludea-feedback`: the creator's own ideas for the engine), **ludea-publish**
-(`/ludea-publish`: readiness + child-safety check → publication request on the catalogue repo),
-**triage-upstream** (maintainers, in Nebula: qualify the inbox → one PR the owner approves →
-propagate to the template + catalogue games). Engine fingerprint: `_shared/engine-manifest.json`
+**idea** (`/idea`: the creator's own ideas for the engine), **publish**
+(`/publish`: readiness + child-safety check → publication or update request on the catalogue repo),
+**update** (`/update`: pull the latest engine from the template `ludea-ai/game-engine`; a SessionStart
+hook, `update-check.cjs`, says when one exists). Triage of the inbox is done by Ludea's maintainers
+(not in this repo). Release notes: `_shared/CHANGELOG.md`. Engine fingerprint: `_shared/engine-manifest.json`
 (`upstream.cjs`). Shared tooling in `_shared/` (incl. `separation-audit.cjs`, `prune-assets.cjs`,
 `sync-engine.sh`, `art-check.cjs`, `icon-kit.cjs`, `contact-sheet.py`, `probes/tour.cjs`).
 

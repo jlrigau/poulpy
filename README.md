@@ -10,7 +10,7 @@ you play (lamps, a giant clam, a champion's statue).
 For **young kids (6–8)**: almost no reading needed, one-tap actions, a guide arrow, sound.
 The game is in French, with an English version (flag toggle on the home screen).
 
-▶ **[Play Poulpy](https://ludea.ai/poulpy/)**
+▶ **[Play Poulpy](https://jlrigau.github.io/poulpy/)** — coming soon to the Ludea catalogue
 
 Poulpy is built on the reusable **Ludea game engine** (the [game-engine](https://github.com/ludea-ai/game-engine)
 template): the whole game is described in `game.config.js` + generated art (`tools/art/poulpy.cjs`).

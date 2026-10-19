@@ -23,6 +23,12 @@ Cleanly publish a change to production.
    node .claude/skills/_shared/bump-version.mjs
    ```
    (Skip if you only touched `.claude/` or docs.)
+   Then the **share preview** (the card a shared link shows in iMessage / WhatsApp: image +
+   "Ludea – <title>" + tagline) — it only re-renders when the splash, logo, title or tagline changed:
+   ```bash
+   node .claude/skills/_shared/share-preview.cjs        # writes assets/share.jpg + the tags in index.html
+   ```
+   Look at `assets/share.jpg` when it changed (title readable, logo not cut).
 3. **Verify** — Bash: `node --check engine.js && node --check game.config.js`, the
    separation audit, `art-check.cjs`, and the regression tour (`probes/tour.cjs`, errors
    must be empty). If art/UI changed, **visual-review** must have been done.
@@ -36,7 +42,7 @@ Cleanly publish a change to production.
    (`select:mcp__github__actions_list,mcp__github__actions_get`), fetch the latest
    `deploy.yml` run on the branch, and confirm `conclusion = success`.
    The task is **not done** until it's green.
-7. **Confirm** the live URL (and remind about the "🔄 Refresh" button on iPhone).
+7. **Confirm** the live URL (and remind about the "Refresh" button on iPhone).
 
 ## Guard-rails
 - Always the configured branch, never another branch / PR without explicit permission.
@@ -46,6 +52,10 @@ Cleanly publish a change to production.
   screen and to wait 1–2 min. Batch fixes into fewer deploys while someone is testing —
   rapid successive deploys make results look random.
 - If the run fails: read the log (GitHub MCP `get_job_logs`), fix, re-push.
+- **First deploy of a new repo fails at "Configure Pages"** ("Create Pages site failed. Resource not
+  accessible by integration"): Pages is not on yet and the workflow's `GITHUB_TOKEN` cannot create it.
+  Turn it on with the user's token — `gh api -X POST repos/<owner>/<repo>/pages -f build_type=workflow`
+  (or Settings → Pages → Source: GitHub Actions) — then re-run the failed run (`gh run rerun <id>`).
 
 ## Chaining
 Last step, after **test-debug** (the feature works) and, for a map change, after **map-verify**.

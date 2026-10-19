@@ -6,6 +6,7 @@
  *   node .claude/skills/_shared/i18n-extract.cjs --to en --check  # exit 1 and list untranslated / stale keys
  *   node .claude/skills/_shared/i18n-extract.cjs --to en --prune  # also drop keys no longer in the game
  *   node .claude/skills/_shared/i18n-extract.cjs --to fr           # in a French game: engine fallbacks only
+ * The engine's own texts are filled in automatically from _shared/engine-i18n.json.
  *
  * Run from the game's root. Keys = every player-facing string of game.config.js (same skip rules
  * as the engine's runtime walk) + the engine's own English fallbacks (L("...") / T(key, "...")),
@@ -14,26 +15,24 @@
  * a value equal to the key = intentionally identical (names, "OK"...).
  * NEVER translate identifiers: they are excluded here (lowercase ids, paths, colours, *Id/*Sheet keys).
  */
-const fs = require("fs"), path = require("path"), vm = require("vm");
+const fs = require("fs"), path = require("path");
 const args = process.argv.slice(2);
 const opt = (k) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : null; };
 const to = opt("--to"), check = args.includes("--check"), prune = args.includes("--prune");
 if (!to) { console.error("usage: i18n-extract.cjs --to <lang> [--check] [--prune]"); process.exit(2); }
 const root = process.cwd();
 
-function load(file, extra) {
-  const ctx = { window: {}, navigator: { language: "en" }, console, ...extra };
-  vm.createContext(ctx); vm.runInContext(fs.readFileSync(file, "utf8"), ctx, { filename: file });
-  return ctx.window;
-}
-const G = load(path.join(root, "game.config.js")).GAME;
+// game files are read in a sandboxed browser, never with node:vm (config-json.cjs)
+const { readGlobals } = require("./config-json.cjs");
+function load(file, name) { return readGlobals([[file, name]])[name]; }
+const G = load(path.join(root, "game.config.js"), "GAME");
 const SRC = (G.meta && G.meta.lang) || "en";
 // --to <source language>: only the engine's English fallbacks (a French game must not show "Shop").
 const ONLY_ENGINE = to === SRC;
 if (ONLY_ENGINE && SRC === "en") { console.error("--to en: the game is already in English (meta.lang)"); process.exit(2); }
 
 // Same skip rule as engine.js (I18N_SKIP) + text-shape filters.
-const SKIP = /^(id|ids|saveKey|legacySave|audience|assetVersion|path|src|sheet|sprite|img|image|thumb|icon|color|tint|stat|need|type|kind|mode|font|key|lang)$|(Id|Ids|Sheet|Sprite|Icon|Bg|BgDone|BgWide|BgWideDone|Img|Color|Path|Key)$/;
+const SKIP = /^(id|ids|saveKey|legacySave|audience|author|url|href|assetVersion|path|src|sheet|sprite|img|image|thumb|icon|color|tint|stat|need|type|kind|mode|font|key|lang)$|(Id|Ids|Sheet|Sprite|Icon|Bg|BgDone|BgWide|BgWideDone|Img|Color|Path|Key)$/;
 const TEXTKEY = /label|name|title|text|unit|hint|message|prompt|placeholder|^and$|suffix|word/i;
 function isText(s, k) {
   if (!/\p{L}/u.test(s)) return false;                                   // no letters
@@ -64,7 +63,7 @@ if (to !== "en") {
 // Existing dictionary.
 const file = path.join(root, "game.i18n.js");
 let all = {};
-if (fs.existsSync(file)) all = load(file).GAME_I18N || {};
+if (fs.existsSync(file)) all = load(file, "GAME_I18N") || {};
 const dict = all[to] || {};
 const missing = [...keys.keys()].filter((k) => !dict[k]);
 const stale = Object.keys(dict).filter((k) => !keys.has(k));
@@ -76,8 +75,12 @@ if (check) {
   process.exit(missing.length ? 1 : 0);
 }
 
+// The engine's own texts come translated with the engine (_shared/engine-i18n.json): filled in
+// automatically, never left for the creator to translate.
+let ENGINE_I18N = {};
+try { ENGINE_I18N = JSON.parse(fs.readFileSync(path.join(__dirname, "engine-i18n.json"), "utf8"))[to] || {}; } catch (e) {}
 const out = {};
-for (const k of keys.keys()) out[k] = dict[k] != null ? dict[k] : "";
+for (const k of keys.keys()) out[k] = dict[k] ? dict[k] : (ENGINE_I18N[k] || (dict[k] != null ? dict[k] : ""));
 if (!prune) for (const k of stale) out[k] = dict[k];
 all[to] = out;
 const langs = Object.keys(all).sort();
@@ -89,4 +92,5 @@ for (const l of langs) {
   txt += `window.GAME_I18N.${l} = {\n` + Object.keys(all[l]).map((k) => `  ${JSON.stringify(k)}: ${JSON.stringify(all[l][k])},`).join("\n") + `\n};\n`;
 }
 fs.writeFileSync(file, txt);
-console.log(`game.i18n.js: ${to} ${Object.keys(out).length} keys, ${missing.length} to translate${stale.length ? `, ${stale.length} stale ${prune ? "dropped" : "kept"}` : ""}`);
+const auto = missing.filter((k) => out[k]).length;
+console.log(`game.i18n.js: ${to} ${Object.keys(out).length} keys, ${missing.length - auto} to translate${auto ? `, ${auto} engine texts filled in` : ""}${stale.length ? `, ${stale.length} stale ${prune ? "dropped" : "kept"}` : ""}`);

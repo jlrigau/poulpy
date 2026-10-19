@@ -121,7 +121,7 @@ const LANG = (function () {
 const DICT = I18N[LANG] || null;   // for the source language it only holds the engine fallbacks (when not English)
 function L(s) { return DICT && typeof s === "string" && DICT[s] != null && DICT[s] !== "" ? DICT[s] : s; }
 // Keys that hold identifiers / asset refs, never text: never translated.
-const I18N_SKIP = /^(id|ids|saveKey|legacySave|audience|assetVersion|path|src|sheet|sprite|img|image|thumb|icon|color|tint|stat|need|type|kind|mode|font|key|lang)$|(Id|Ids|Sheet|Sprite|Icon|Bg|BgDone|BgWide|BgWideDone|Img|Color|Path|Key)$/;
+const I18N_SKIP = /^(id|ids|saveKey|legacySave|audience|author|url|href|assetVersion|path|src|sheet|sprite|img|image|thumb|icon|color|tint|stat|need|type|kind|mode|font|key|lang)$|(Id|Ids|Sheet|Sprite|Icon|Bg|BgDone|BgWide|BgWideDone|Img|Color|Path|Key)$/;
 (function tr(o, d) {
   if (!DICT || !o || d > 14) return;
   for (const k in o) {
@@ -650,6 +650,12 @@ function applyStaticText() {
   setHTML("btn-continue", btnHTML(META.continueLabel || L("Continue"), META.continueIcon || "resume"));
   setHTML("btn-refresh", iconHTML("refresh") + " " + esc(stripIcons(T("refreshLabel", "Refresh (clear cache)"))));
   set("app-version", "build " + ASSET_VER);   // visible build tag (helps confirm the cache is fresh)
+  // made with Ludea + legal notice, a small line under the home footer (see legalLinksHTML)
+  const foot = document.querySelector("#screen-home .home-foot");
+  if (foot && !$("home-legal")) {
+    const p = document.createElement("p"); p.id = "home-legal"; p.className = "home-legal";
+    p.innerHTML = legalLinksHTML(); foot.insertAdjacentElement("afterend", p); wireLegalLinks(p);
+  }
   // Language switch (only when game.i18n.js provides another language): ONE toggle button pinned
   // to the home screen's top-left corner, a themed pill with the round flags and a knob behind the
   // active one. A tap slides the knob to the next language, saves it and reloads (texts are applied
@@ -2283,9 +2289,9 @@ function updateGuide(time) {
       // keep the pointer in the free band between the HUD bar and the bottom panel (never over a button)
       const r = sc.game.canvas.getBoundingClientRect(), bar = document.querySelector("#screen-game .top-bar"), pn = $("panel");
       const barB = bar ? bar.getBoundingClientRect().bottom : r.top, pr = pn && pn.offsetHeight ? pn.getBoundingClientRect() : null;
-      const T = Math.max(r.top, barB) + 34, B = Math.min(r.bottom, pr && pr.top > T + 80 ? pr.top : r.bottom) - 34;
-      const L = r.left + 34, R = r.right - 34, mx = (L + R) / 2, my = (T + B) / 2;
-      const k = Math.min(Math.abs((R - L) / 2 / (Math.cos(ang) || 1e-6)), Math.abs((B - T) / 2 / (Math.sin(ang) || 1e-6)));
+      const top = Math.max(r.top, barB) + 34, bot = Math.min(r.bottom, pr && pr.top > top + 80 ? pr.top : r.bottom) - 34;
+      const lft = r.left + 34, rgt = r.right - 34, mx = (lft + rgt) / 2, my = (top + bot) / 2;
+      const k = Math.min(Math.abs((rgt - lft) / 2 / (Math.cos(ang) || 1e-6)), Math.abs((bot - top) / 2 / (Math.sin(ang) || 1e-6)));
       edge.style.left = (mx + Math.cos(ang) * k) + "px";
       edge.style.top = (my + Math.sin(ang) * k) + "px";
       edge.style.setProperty("--ang", (ang * 180 / Math.PI) + "deg");
@@ -3450,9 +3456,16 @@ function openMissions() {
 // A "hot" offer starts its chase once the cargo is picked up.
 // An offer may override the mission-wide settings for its own missions: pickups (array, or false =
 // one leg even when the others have two), dests, target / marker (false = none), the messages
-// (takenMessage, hotMessage, pickedMessage, hotPickedMessage, doneMessage) and an extra `stat` it
-// counts on completion (e.g. a "big treasure" counter that drives its own unlocks).
-function missionOffer(m) { return (m && m.offer != null && (MISSIONS.offers || [])[m.offer]) || {}; }
+// (takenMessage, hotMessage, pickedMessage, hotPickedMessage, doneMessage), an extra `stat` it
+// counts on completion (e.g. a "big treasure" counter that drives its own unlocks), and how a chase
+// ends when caught (caughtKeepsMission, caughtMessage — see chase). The save remembers the offer by
+// its `id` (index when it has none), so reordering offers in the config keeps saved missions right.
+function offerRef(of) { const i = (MISSIONS.offers || []).indexOf(of); return i < 0 ? null : (of.id != null ? of.id : i); }
+function missionOffer(m) {
+  if (!m || m.offer == null || !MISSIONS) return {};
+  const offers = MISSIONS.offers || [];
+  return (typeof m.offer === "number" ? offers[m.offer] : offers.find((o) => o.id === m.offer)) || {};
+}
 function mOpt(m, k) { const o = missionOffer(m); return o[k] !== undefined ? o[k] : MISSIONS[k]; }
 function missionGoal(m) { return m.stage === "pickup" ? { x: m.px, y: m.py, name: m.pname } : { x: m.x, y: m.y, name: m.name }; }
 function farPick(list, from, avoid) {
@@ -3460,7 +3473,7 @@ function farPick(list, from, avoid) {
   return pick(far.length ? far : list);
 }
 function takeMission(of) {
-  const oi = (MISSIONS.offers || []).indexOf(of), probe = { offer: oi < 0 ? null : oi };
+  const probe = { offer: offerRef(of) };
   const dests = mOpt(probe, "dests") || [{ x: WORLD.w / 2, y: WORLD.h / 2, name: "" }];
   const pks = mOpt(probe, "pickups");
   const pk = pks && pks.length ? farPick(pks, player) : null;
@@ -3497,9 +3510,9 @@ function buildMissionVisual() {
   const col = hexInt(MISSIONS.color || "#4fe0a0"), m = state.mission, g = missionGoal(m);
   msRing = sc.add.graphics().setDepth(-15);
   const deliver = m.stage === "deliver" || !m.stage;
-  const T = mOpt(m, "target"), MK = mOpt(m, "marker");
-  const tgt = deliver && T && sc.textures.exists(T) ? T : null;
-  const key = tgt || (MK && sc.textures.exists(MK) ? MK : null);
+  const tKey = mOpt(m, "target"), mKey = mOpt(m, "marker");
+  const tgt = deliver && tKey && sc.textures.exists(tKey) ? tKey : null;
+  const key = tgt || (mKey && sc.textures.exists(mKey) ? mKey : null);
   if (key) {
     msMarker = sc.add.image(g.x, g.y, key).setOrigin(0.5, tgt ? 0.5 : 0.9).setScale((tgt ? (mOpt(m, "targetScale") || 1) : (mOpt(m, "markerScale") || 1)) / RES(key)).setDepth(tgt ? -14 : g.y + 1);
     msMarker._scKey = tgt;
@@ -3554,7 +3567,8 @@ function completeMission() {
 // chase = { sprite, dirSheet?:{cols}, scale, icon, maxLevel, maxUnits, speed, catchRadius, catchSeconds,
 //   loseRadius, loseAfter, fine, spawnDist, escapedMessage, caughtMessage("{f}") }
 // Missions with heat raise the level; pursuers spawn around the player and home in; staying
-// close for catchSeconds = caught (a fine + the mission is lost). Lose them by staying far
+// close for catchSeconds = caught (a fine + the mission is lost; with caughtKeepsMission — on the
+// chase, or overridden by the current mission's offer — only the fine: the pursuers leave, the mission goes on). Lose them by staying far
 // for loseAfter seconds (−1 level each time), or clear it (e.g. a restyle with clearsChase).
 const CHASE = G.chase || null;
 let chasers = [], catchT = 0, evadeT = 0;
@@ -3623,11 +3637,15 @@ function chaseTick(dt) {
 function caught() {
   const fine = Math.min(state.coins, CHASE.fine || 40);
   state.coins -= fine;
-  // chase.caughtKeepsMission: the pursuer only takes its fine and leaves; the mission goes on (gentler, kids)
-  if (state.mission && !CHASE.caughtKeepsMission) { state.mission = null; clearMissionVisual(); refreshCargo(); }
-  clearHeat(!!CHASE.caughtKeepsMission); Sound.play("error");
+  // caughtKeepsMission: the pursuer only takes its fine and leaves; the mission goes on (gentler, kids).
+  // The current mission's offer may override it (and caughtMessage) for its own errands.
+  const of = MISSIONS && state.mission ? missionOffer(state.mission) : {};
+  const keep = !!(of.caughtKeepsMission !== undefined ? of.caughtKeepsMission : CHASE.caughtKeepsMission);
+  const msg = of.caughtMessage || CHASE.caughtMessage || L("Caught! −{f}");
+  if (state.mission && !keep) { state.mission = null; clearMissionVisual(); refreshCargo(); }
+  clearHeat(keep); Sound.play("error");
   if (sc) sc.cameras.main.shake(260, 0.006);
-  message((CHASE.caughtMessage || L("Caught! −{f}")).replace("{f}", fine));
+  message(msg.replace("{f}", fine));
   refreshHud(); save();
 }
 
@@ -4317,7 +4335,55 @@ function openGoals() {
 
 function openHelp() {
   const items = (G.help || []).map((h, i) => `<div class="help-row${i === 0 ? " lead" : ""}">${fmt(h, true)}</div>`).join("");
-  openModal(META.helpTitle || L("How to play"), `<div class="help-text">${items}</div>`);
+  // the same small links as the bottom of the home screen: made with Ludea + legal notice
+  openModal(META.helpTitle || L("How to play"), `<div class="help-text">${items}</div><p class="help-legal">${legalLinksHTML()}</p>`);
+  wireLegalLinks($("modal-body"));
+}
+
+/* ===================== Credits & legal notice ===================== */
+// Every game shows, at the bottom of the home screen and of the help: "Made with Ludea" (a link to
+// the engine's site) and a legal notice. A game SERVED BY ITS PUBLISHER's own legal pages lists them
+// in meta.legalLinks [{ label, url }] (Ludea's catalogue copies: legal notice, privacy, contact).
+// Otherwise the engine builds the notice from meta.author: a game made with Ludea and published by
+// its creator on their own site is a personal, non-professional site — publisher = the creator's
+// chosen name or pseudonym, contact = their GitHub profile, host = GitHub Pages; Ludea is not its
+// publisher. Links open in a new tab so the game is never lost.
+const ENGINE_SITE = "https://ludea.ai/";
+const safeUrl = (u) => /^(https:\/\/|\/|\.\.?\/)/.test(String(u || ""));
+function legalLinksHTML() {
+  const ext = (META.legalLinks || []).filter((l) => l && l.label && safeUrl(l.url));
+  const made = `<a href="${ENGINE_SITE}" target="_blank" rel="noopener">${esc(L("Made with Ludea"))}</a>`;
+  const legal = ext.length ? ext.map((l) => `<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(L(l.label))}</a>`).join(" · ")
+    : `<a href="#" data-legal="1">${esc(L("Legal notice"))}</a>`;
+  return `${made} · ${legal}`;
+}
+function wireLegalLinks(root) {
+  if (root) root.querySelectorAll("[data-legal]").forEach((a) => a.addEventListener("click", (e) => { e.preventDefault(); openLegal(); }));
+}
+// Who made the game, for the notice: meta.creditLine (a translatable sentence the creator chose,
+// e.g. "Lea and her dad") or the author's name + co-authors' first names / nicknames.
+function creditText() {
+  const a = META.author || {};
+  if (META.creditLine) return META.creditLine;
+  return [a.name].concat((a.coAuthors || []).map((c) => c && c.name)).filter(Boolean).join(" & ");
+}
+function openLegal() {
+  const a = META.author || {};
+  const gh = /^[A-Za-z0-9-]{1,39}$/.test(a.github || "") ? a.github : "";
+  const who = creditText();
+  const row = (h, body) => `<div class="legal-row"><b>${esc(h)}</b><p>${body}</p></div>`;
+  const html = [
+    row(L("Publisher"), esc(a.name ? T("legalPublisher", "{name}, personal non-professional website.", { name: a.name }) : L("The author of this game, personal non-professional website.")) +
+      (gh ? `<br>${esc(L("Contact:"))} <a href="https://github.com/${gh}" target="_blank" rel="noopener">github.com/${gh}</a>` : "")),
+    who && who !== a.name ? row(L("Created by"), esc(who)) : "",
+    row(L("Host"), "GitHub B.V. (GitHub Pages), Vijzelstraat 68-72, 1017 HL Amsterdam, " + esc(L("Netherlands")) +
+      ` — <a href="https://support.github.com/" target="_blank" rel="noopener">support.github.com</a>`),
+    row(L("Privacy"), esc(L("This game collects no personal data: no account, no cookie, no advertising, no audience measurement. Your game is saved only on this device.")) +
+      " " + esc(L("Like any web host, GitHub processes technical data such as IP addresses to deliver the pages."))),
+    row(L("Made with Ludea"), esc(L("This game is made with Ludea, a free game engine (MIT licence). Ludea is not the publisher of this game and has not reviewed it.")) +
+      ` <a href="${ENGINE_SITE}" target="_blank" rel="noopener">ludea.ai</a>`),
+  ].join("");
+  openModal(L("Legal notice"), `<div class="legal-text">${html}</div>`);
 }
 
 /* ===================== Boot ===================== */

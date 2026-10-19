@@ -3,40 +3,89 @@
 // Runs on THIS repo, or on any game folder (the catalogue reviewer points it at a clone of a
 // submitted game, using its OWN trusted copy of this script — never the submitted one).
 //
-//   node .claude/skills/_shared/publish-check.cjs [gameDir] [--json] [--no-run] [--shots DIR]
+//   node .claude/skills/_shared/publish-check.cjs [gameDir] [--json] [--no-run] [--shots DIR] [--texts FILE]
 //
 // Static part: catalogue fields (title, tagline, audience age, language + translation, app
 // icons, README, credits), forbidden/risky code in the GAME files (external links, network
-// calls, trackers, forms, camera/micro/location, iframes…), engine layer changed but not reported.
+// calls, trackers, forms, camera/micro/location, iframes…), content (first names that could be a
+// real child's, well-known characters/brands, photo-format images), every image covered by a
+// credit line or drawn by tools/art, licences in the accepted list (CC0, public domain, CC BY,
+// CC BY-SA — never ND/NC), engine layer changed but not reported.
 // Runtime part (Chromium): loads the game, starts it, plays a few seconds and records every
 // request to ANOTHER origin (must be none) + page errors; screenshots home + world.
 // Exit 0 = ready, 1 = blocking problems, 2 = warnings only.
 "use strict";
-const fs = require("fs"), path = require("path"), cp = require("child_process"), vm = require("vm"), net = require("net");
+const fs = require("fs"), path = require("path"), cp = require("child_process"), net = require("net");
 
 const argv = process.argv.slice(2);
 const flag = (k) => argv.includes(k);
 const opt = (k) => { const i = argv.indexOf(k); return i >= 0 ? argv[i + 1] : undefined; };
-const DIR = path.resolve(argv.find((a, i) => !a.startsWith("--") && argv[i - 1] !== "--shots") || path.resolve(__dirname, "../../.."));
+const DIR = path.resolve(argv.find((a, i) => !a.startsWith("--") && argv[i - 1] !== "--shots" && argv[i - 1] !== "--texts") || path.resolve(__dirname, "../../.."));
 const rd = (f) => { try { return fs.readFileSync(path.join(DIR, f), "utf8"); } catch (e) { return null; } };
 const exists = (f) => fs.existsSync(path.join(DIR, f));
 
 const blockers = [], warnings = [], info = {};
 const B = (m) => blockers.push(m), W = (m) => warnings.push(m);
 
+// The game's files are UNTRUSTED (a submitted game may be hostile): its code is never run by Node
+// (node:vm is not a security boundary — a config can escape it and reach the reviewer's credentials).
+// It is evaluated only inside headless Chromium, with every network request blocked, and only the
+// resulting data (JSON) comes back.
+function loadPlaywright() {
+  for (const c of ["playwright", "/opt/node22/lib/node_modules/playwright"]) { try { return require(c); } catch (e) {} }
+  return null;
+}
+async function evalConfigInBrowser(src) {
+  const pw = loadPlaywright();
+  if (!pw) throw new Error("Playwright not found — the config is only evaluated inside a browser");
+  const browser = await pw.chromium.launch();
+  try {
+    const ctx = await browser.newContext({ javaScriptEnabled: true });
+    await ctx.route("**/*", (r) => r.abort());
+    const page = await ctx.newPage();
+    await page.addScriptTag({ content: src });   // runs inside the sandboxed page only
+    return await page.evaluate(() => JSON.parse(JSON.stringify(window.GAME || null)));
+  } finally { await browser.close(); }
+}
+
 // ---------- 1. Catalogue fields
 let G = null;
+async function main() {
 const cfg = rd("game.config.js");
 if (!cfg) B("game.config.js missing — not a Ludea engine game");
 else {
-  try { const sb = { window: {} }; vm.runInNewContext(cfg, sb, { timeout: 2000 }); G = sb.window.GAME || sb.GAME; }
+  try { G = await evalConfigInBrowser(cfg); }
   catch (e) { B("game.config.js does not evaluate: " + e.message); }
 }
+// --texts FILE: every player-facing text (config + translations), for the child-safety reviewer —
+// produced here so the reviewer never has to run the submitted game's code with Node.
+if (opt("--texts") && G) {
+  const out = new Set();
+  (function walk(o, k) {
+    if (typeof o === "string") { if (/\p{L}{2}/u.test(o) && !/^(#|rgba?\(|https?:|[\w./-]+\.(webp|png|jpe?g|svg|js|css)$)/.test(o) && !/^(id|key|path|src|sheet|img|icon|color|saveKey|stat|need|type|kind|mode|lang)$/.test(k || "")) out.add(o); return; }
+    if (o && typeof o === "object") for (const [kk, v] of Object.entries(o)) walk(v, Array.isArray(o) ? k : kk);
+  })(G, "");
+  const i18nSrc = rd("game.i18n.js");
+  if (i18nSrc) {
+    try {
+      const pw = loadPlaywright(), browser = await pw.chromium.launch();
+      const ctx = await browser.newContext(); await ctx.route("**/*", (r) => r.abort());
+      const page = await ctx.newPage();
+      await page.addScriptTag({ content: i18nSrc });
+      const dicts = await page.evaluate(() => JSON.parse(JSON.stringify(window.GAME_I18N || {})));
+      await browser.close();
+      for (const d of Object.values(dicts)) for (const v of Object.values(d || {})) if (typeof v === "string" && v) out.add(v);
+    } catch (e) { W("game.i18n.js could not be read for --texts: " + e.message); }
+  }
+  fs.writeFileSync(opt("--texts"), [...out].join("\n") + "\n");
+  info.texts = out.size;
+}
 const M = (G && G.meta) || {};
-info.title = M.title; info.tagline = M.tagline; info.lang = M.lang; info.audience = M.audience;
+info.title = M.title; info.tagline = M.tagline; info.description = M.description; info.lang = M.lang; info.audience = M.audience;
 if (G) {
   if (!M.title) B("meta.title missing (the game's name)");
   if (!M.tagline) B("meta.tagline missing (one-line description shown in the catalogue)");
+  if (!M.description) W("meta.description missing — 1-2 sentences for the catalogue card (asked once, then reused by every re-submission)");
   const a = M.audience || {};
   if (typeof a.minAge !== "number") B("meta.audience.minAge missing — the catalogue needs the target age");
   else if (a.minAge < 3) W("meta.audience.minAge < 3 — the engine's games are designed for 5+");
@@ -74,6 +123,7 @@ else {
   if (/(unknown|inconnu|\?\?\?)/i.test(cr)) W("assets/CREDITS.md mentions an unknown origin/licence");
 }
 if (!exists("index.html")) B("index.html missing");
+else if (!/<!-- ludea:share/.test(rd("index.html"))) W("no share preview — a shared link shows no image/title: run share-preview.cjs (release-deploy does)");
 
 // ---------- 2. Risky content in the GAME files (the engine layer is reviewed upstream)
 // The engine shell's own name field (#place-name-input: a name for the place, max 20 chars, kept on the
@@ -116,23 +166,115 @@ const okScripts = ["vendor/phaser.min.js", "game.config.js", "game.i18n.js", "en
 scripts.filter((s) => !okScripts.includes(s.replace(/^\.\//, ""))).forEach((s) => W("index.html loads an unexpected script: " + s));
 if (/<script(?![^>]*src)[^>]*>[\s\S]*?\S[\s\S]*?<\/script>/i.test(idx)) info.inlineScript = true;
 
+// ---------- 2b. Content: personal data, copied content, image origin + licences
+// The texts players see (config + translations + shell) and every image the game ships.
+const TEXT = ["game.config.js", "game.i18n.js", "index.html"].map((f) => rd(f) || "").join("\n");
+const strings = [...TEXT.matchAll(/"((?:[^"\\]|\\.){2,})"|'((?:[^'\\]|\\.){2,})'|`([^`]{2,})`|>([^<>]{2,})</g)]
+  .map((m) => m[1] || m[2] || m[3] || m[4]).filter((t) => /[A-Za-zÀ-ÿ]{2}/.test(t) && !/^[\w./:-]+\.(webp|png|jpe?g|svg|js|css)$/.test(t));
+const words = strings.join(" \n ");
+info.authorName = (M.author || {}).name;
+// Real children's first names: common French / English first names in the texts (players see them).
+// A warning: the reviewer asks the creator — a creature called "Lucas" is fine, a classmate is not.
+const FIRST_NAMES = ("Emma Léa Louise Alice Chloé Inès Jeanne Lina Mila Anna Julia Zoé Léna Manon Camille Lou Romane Sarah Eva " +
+  "Nina Juliette Adèle Margaux Clara Léonie Charlotte Lucie Mathilde Agathe Elena Gabrielle Lola Mia Maëlys Lisa Victoria " +
+  "Gabriel Louis Raphaël Jules Adam Lucas Léo Hugo Arthur Nathan Liam Ethan Paul Sacha Tom Noah Mohamed Aaron Théo Nolan " +
+  "Timéo Mathis Enzo Axel Antoine Maël Gaspard Baptiste Clément Victor Martin Valentin Samuel Noé Isaac Tiago Kylian " +
+  "Olivia Amelia Isla Ava Sophia Grace Lily Freya Emily Ivy Ella Isabella Poppy Evie Harper Sienna Willow Daisy Matilda " +
+  "Oliver George Noah Arthur Muhammad Leo Harry Oscar Archie Henry Theodore Freddie Jack Charlie Thomas Jacob Alfie Finley James William").split(" ");
+const namesFound = [...new Set(FIRST_NAMES.filter((n) => new RegExp(`(^|[^\\p{L}])${n}([^\\p{L}]|$)`, "u").test(words)))]
+  .filter((n) => ![info.authorName, M.creditLine, ...(((M.author || {}).coAuthors) || []).map((c) => c && c.name)].join(" ").includes(n));
+// a child co-author is credited by a first name or a nickname only (never a surname, age, school, town)
+for (const c of (((M.author || {}).coAuthors) || [])) {
+  const nm = String((c && c.name) || "").trim();
+  if (!nm) continue;
+  if (/\s\p{Lu}/u.test(nm) || /\d/.test(nm) || nm.split(/\s+/).length > 2) B(`co-author "${nm}": a first name or a nickname only (no surname, age, school or town)`);
+}
+info.firstNames = namesFound;
+if (namesFound.length) W(`first names in the game's texts: ${namesFound.slice(0, 12).join(", ")} — make sure none is a real child's name (a pet name is fine)`);
+// Copied content: well-known characters / brands (not ours to use; parents and rights holders notice).
+const BRANDS = new RegExp([
+  "pok[ée]mon|pikachu|disney|pixar|minecraft|fortnite|roblox|super mario|nintendo",
+  "zelda|harry potter|poudlard|hogwarts|spider-?man|marvel|avengers|batman",
+  "reine des neiges|peppa pig|pat'? ?patrouille|paw patrol|barbie|hello kitty",
+  "bluey|\\blego\\b|playmobil|sonic the hedgehog|star wars|\\bjedi\\b|pac-?man",
+  "tetris|angry birds|schtroumpf|smurf|ast[ée]rix|tintin|winnie|mickey|minnie",
+  "\\bstitch\\b|\\bsimba\\b|\\bshrek\\b|minions|totoro|naruto|dragon ball|one piece",
+  "bob l'[ée]ponge|spongebob|garfield|snoopy|scooby",
+].join("|"), "gi");
+const brands = [...new Set((words.match(BRANDS) || []).map((b) => b.toLowerCase()))];
+info.brands = brands;
+if (brands.length) B(`well-known characters / brands in the texts: ${brands.join(", ")} — Ludea games use their own characters (remove them, or rename)`);
+
+// Images: every one must be covered by a line of assets/CREDITS.md (by name, pattern or folder), or be
+// drawn by the game's own art module; licences must be in the accepted list.
+const IMG = /\.(png|jpe?g|webp|gif|svg|avif)$/i;
+const images = [];
+(function walk(rel) {
+  const abs = path.join(DIR, rel);
+  for (const f of fs.existsSync(abs) ? fs.readdirSync(abs) : []) {
+    if (!rel && /^(\.git|node_modules|\.claude|tools|vendor|upstream)$/.test(f)) continue;
+    const r = rel ? rel + "/" + f : f;
+    if (fs.statSync(path.join(DIR, r)).isDirectory()) walk(r); else if (IMG.test(f)) images.push(r);
+  }
+})("");
+info.images = images.length;
+const credits = rd("assets/CREDITS.md") || "";
+const artFiles = (fs.existsSync(path.join(DIR, "tools/art")) ? fs.readdirSync(path.join(DIR, "tools/art")) : []).filter((f) => /\.c?js$/.test(f));
+const artText = artFiles.map((f) => fs.readFileSync(path.join(DIR, "tools/art", f), "utf8")).join("\n");
+const creditTokens = [...credits.matchAll(/`([^`]+)`/g)].map((m) => m[1].trim());
+const esc = (t) => t.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^/]*");
+const covered = (img) => {
+  const base = img.split("/").pop(), stem = base.replace(/\.[^.]+$/, "");
+  if (credits.includes(base) || credits.includes(stem + ".")) return true;
+  for (const t of creditTokens) {
+    if (!/[*/.]/.test(t)) continue;
+    const re = new RegExp("(^|/)" + esc(t.replace(/^\.?\//, "")) + "$");
+    if (re.test(img) || re.test(base) || (t.endsWith("/") && img.startsWith(t.replace(/^\.?\//, "")))) return true;
+  }
+  // drawn by the game's own art module (it names its output files)
+  if (artText && (artText.includes(base) || artText.includes(stem + ".") || artText.includes(`"${stem}"`) || artText.includes(`'${stem}'`))) return true;
+  const parts = stem.split(/[_-]/), prefix = parts[0], last = parts[parts.length - 1];
+  if (!artText) return false;
+  if (prefix.length >= 3 && new RegExp(`["'\`/]${esc(prefix)}[_-]`).test(artText)) return true;      // "critter_" + colour
+  return parts.length > 1 && last.length >= 3 && artText.includes(`}_${last}.`);                       // `${name}_ride.png`
+};
+const uncovered = images.filter((i) => i !== "assets/share.jpg" && !covered(i)); // share.jpg = splash + logo, by share-preview.cjs
+info.imagesUncovered = uncovered;
+if (uncovered.length) B(`${uncovered.length} image(s) with no credit line (origin + licence) in assets/CREDITS.md and not drawn by tools/art: ${uncovered.slice(0, 10).join(", ")}${uncovered.length > 10 ? "…" : ""}`);
+const photos = images.filter((i) => /\.jpe?g$/i.test(i) && i !== "assets/share.jpg");
+if (photos.length) W(`photo-format images (${photos.slice(0, 6).join(", ")}) — make sure none is a personal photo (a child, a home, a school)`);
+// Licences, line by line: accepted = CC0, public domain, CC BY, CC BY-SA (+ MIT / OFL for code and fonts).
+const OK_LIC = /\bCC0\b|public domain|domaine public|\bCC[- ]?BY(?:[- ]SA)?\b|creativecommons\.org\/(?:licenses\/by(?:-sa)?\/|publicdomain)|\bMIT\b|\bOFL\b|Open Font License/i;
+const BAD_LIC = /\bCC[- ]?BY[- ](?:SA[- ])?(?:NC|ND)\b|\b(?:NC|ND)\b(?=[- ]?\d|\s*licen)|NoDeriv|No[- ]Deriv|NonCommercial|Non[- ]Commercial|pas d'utilisation commerciale|all rights reserved|tous droits r[ée]serv[ée]s|personal use|usage personnel|by-nc|by-nd/i;
+const badLines = [], unlicensed = [];
+for (const line of credits.split("\n")) {
+  if (!/\S/.test(line) || /^\s*#/.test(line)) continue;
+  if (BAD_LIC.test(line)) { badLines.push(line.trim().slice(0, 100)); continue; }
+  const ext = [...line.matchAll(/https?:\/\/([a-z0-9.-]+)/gi)].map((m) => m[1]).filter((h) => !ALLOW_HOST.test(h));
+  if (ext.length && !OK_LIC.test(line)) unlicensed.push(line.trim().slice(0, 100));
+}
+if (badLines.length) B(`licence not accepted (ND / NC / all rights reserved) in assets/CREDITS.md: ${badLines.slice(0, 4).join(" | ")}`);
+if (unlicensed.length) B(`third-party asset without an accepted licence (CC0, public domain, CC BY, CC BY-SA) in assets/CREDITS.md: ${unlicensed.slice(0, 4).join(" | ")}`);
+
 // ---------- 3. Engine layer: changed but not reported upstream?
-const up = path.join(DIR, ".claude/skills/_shared/upstream.cjs");
 if (fs.existsSync(path.join(DIR, ".claude/skills/_shared/engine-manifest.json"))) {
   try {
-    const own = path.join(__dirname, "upstream.cjs"); // trusted copy, run against DIR via cwd-less ROOT? → run the target's only if it is ours
-    const out = cp.execSync(`node ${JSON.stringify(fs.existsSync(up) && DIR === path.resolve(__dirname, "../../..") ? up : own)} drift --json`, { cwd: DIR, encoding: "utf8" });
+    // OUR copy of upstream.cjs, pointed at DIR (never the submitted repo's own scripts)
+    const own = path.join(__dirname, "upstream.cjs");
+    // drift exits non-zero when something changed: read its JSON either way
+    const out = cp.spawnSync("node", [own, "drift", "--json", "--upstream", "--unreported"], { cwd: DIR, encoding: "utf8", env: { ...process.env, UPSTREAM_ROOT: DIR } }).stdout;
     const d = JSON.parse(out); const n = d.changed.length + d.added.length + d.removed.length;
     info.engine = d.manifest && d.manifest.version;
-    if (n && DIR === path.resolve(__dirname, "../../..")) W(`engine layer changed in ${n} file(s) — run report-upstream so Ludea gets it (and the next sync doesn't overwrite it)`);
-  } catch (e) { /* drift exit 2 is fine */ }
+    if ((d.behind || []).length) info.engineBehind = d.behind.length; // only an older/newer Ludea copy: fine to submit (update first if you like)
+    info.engineDrift = n;
+    if (n) W(`engine layer changed in ${n} file(s) not yet reported — ${DIR === path.resolve(__dirname, "../../..") ? "run report-upstream so Ludea gets it (and the next sync doesn't overwrite it)" : "the reviewer must read these changes by hand"}`);
+  } catch (e) { W("engine drift could not be computed: " + e.message); }
 }
 
 // ---------- 4. Runtime: no request leaves the game's origin, no page error
 async function runtime() {
   if (flag("--no-run")) return;
-  let pw = null;
-  for (const c of ["playwright", "/opt/node22/lib/node_modules/playwright"]) { try { pw = require(c); break; } catch (e) {} }
+  const pw = loadPlaywright();
   if (!pw) { W("Playwright not found — runtime check skipped"); return; }
   const port = await new Promise((r) => { const s = net.createServer().listen(0, () => { const p = s.address().port; s.close(() => r(p)); }); });
   const srv = cp.spawn("python3", ["-m", "http.server", String(port), "--bind", "127.0.0.1"], { cwd: DIR, stdio: "ignore" });
@@ -160,7 +302,10 @@ async function runtime() {
   if (errors.length) B(`${errors.length} page error(s): ` + errors.slice(0, 3).join(" | "));
 }
 
-runtime().then(() => {
+await runtime();
+}
+
+main().then(() => {
   const res = { dir: DIR, ready: !blockers.length, blockers, warnings, info };
   if (flag("--json")) console.log(JSON.stringify(res, null, 1));
   else {
