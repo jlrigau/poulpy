@@ -209,6 +209,7 @@ like a game made by a studio — not a prototype. Concretely:
   **crab thief** chases you (`chase`, slower than Poulpy, `caughtKeepsMission`: it only pinches 5 pearls);
   each big treasure unlocks one of 5 rare items in the "treasure corner" by the house, stat `bigTreasure`), rest in Poulpy's jar (amphora) house, unlocks
   (lamps, giant clam, champion statue), 3 objective levels. Pearls = coins (no shop yet).
+  The player IS Poulpy: `meta.askPlayerName:false` (no « Ton prénom » field — owner request, game-engine#20).
 - Owner choices (first interview): extra activity = **treasure hunt**; race mount = **sea turtle**.
   Treasure modes (2nd interview): big = "le voleur de trésor", on foot or riding, reward = a rare item.
   The hero is an **octopus named Poulpy** (owner correction: a first version misheard it as a chick

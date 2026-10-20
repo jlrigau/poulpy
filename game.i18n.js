@@ -8,7 +8,6 @@ window.GAME_I18N.en = {
   "Le nom de ta cité :": "Name your city:",
   "Bulle-Ville": "Bubbletown",
   "Ma cité": "My city",
-  "Ton prénom": "Your name",
   "Voici Poulpy !": "Meet Poulpy!",
   "On plonge !": "Let's dive!",
   "Nouvelle partie": "New game",
