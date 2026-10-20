@@ -201,6 +201,8 @@ like a game made by a studio — not a prototype. Concretely:
   le moteur » = /update, « publie » = release-deploy or /publish…), invoke it with the Skill tool EVERY time
   and follow the version on disk — even if it was read earlier in the session: any engine sync can change
   it. Same for every skill a skill chains to. After a sync, re-invoke the skills still to run.
+  Having a GitHub tool at hand is no reason to skip one: every issue or comment sent to `ludea-ai/*`
+  goes through **/idea** (the owner's feedback) or **report-upstream** (what the work taught).
 - New owner feedback → add it to this section (via **capitalize-learnings**).
 
 ## 10. This repo — Poulpy (`jlrigau/poulpy`)
