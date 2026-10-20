@@ -196,6 +196,11 @@ like a game made by a studio — not a prototype. Concretely:
 - **Engine problems found along the way are reported directly** (owner, 2026-10-19): run **report-upstream**
   yourself (`add_repo` ludea-ai/game-engine, then create the issue / comment) — never stop at a
   prefilled link for the owner to click. The owner has already said yes, don't ask.
+- **Skills are always invoked, never replayed from memory** (owner, 2026-10-20, game-engine#23): when a
+  request matches a skill (its slash command, its triggers, or plain words meaning the same — « mets à jour
+  le moteur » = /update, « publie » = release-deploy or /publish…), invoke it with the Skill tool EVERY time
+  and follow the version on disk — even if it was read earlier in the session: any engine sync can change
+  it. Same for every skill a skill chains to. After a sync, re-invoke the skills still to run.
 - New owner feedback → add it to this section (via **capitalize-learnings**).
 
 ## 10. This repo — Poulpy (`jlrigau/poulpy`)

@@ -119,5 +119,11 @@
   "kind": "idea",
   "key": "option to not ask the player name (named hero)",
   "issue": "https://github.com/ludea-ai/game-engine/issues/20"
+ },
+ {
+  "at": "2026-10-20T08:30:24.988Z",
+  "kind": "bug",
+  "key": "skills replayed from memory instead of invoked",
+  "issue": "https://github.com/ludea-ai/game-engine/issues/23"
  }
 ]
